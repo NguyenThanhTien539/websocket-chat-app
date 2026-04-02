@@ -4,7 +4,14 @@
   "main": "index.js",
   "author": "NguyenThanhTien539 <161334882+NguyenThanhTien539@users.noreply.github.com>",
   "license": "MIT",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
   "dependencies": {
-    "express": "^5.2.1"
+    "dotenv": "^17.4.0",
+    "express": "^5.2.1",
+    "mongoose": "^9.3.3",
+    "nodemon": "^3.1.14"
   }
 }
