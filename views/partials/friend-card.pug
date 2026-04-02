@@ -1,0 +1,9 @@
+article.list-card
+  .list-card__left
+    .chat-avatar(class=friend.status === "online" ? "is-online" : "")= friend.avatar
+    .list-card__info
+      h4= friend.name
+      p= friend.lastMessage
+  .list-card__right
+    a.btn.btn-sm.btn-primary(href="/chat") Nhắn tin
+    button.btn.btn-sm.btn-light(type="button") Xóa

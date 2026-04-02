@@ -1,0 +1,21 @@
+extends ../layouts/default.pug
+
+block main
+  main.chat-layout
+    include ../partials/sidebar.pug
+
+    section.chat-list-panel
+      .chat-list-panel__header
+        h2 Danh sách người dùng
+        p Khám phá và kết nối với người dùng mới.
+      .chat-list
+        each user in users
+          include ../partials/user-card.pug
+
+    section.chat-main-panel
+      - const conversation = { avatar: "BC", name: "BlinkChat Assistant", statusText: "Chọn người dùng để mở cuộc trò chuyện" }
+      - const isRoom = false
+      include ../partials/chat-header.pug
+      - const title = "Chưa có cuộc trò chuyện"
+      - const description = "Chọn một người dùng ở cột giữa để bắt đầu nhắn tin 1-1."
+      include ../partials/empty-state.pug

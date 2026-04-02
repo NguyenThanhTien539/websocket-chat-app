@@ -1,0 +1,50 @@
+extends ../layouts/default.pug
+
+block main
+  section.home-hero
+    .container
+      .home-hero__grid
+        .home-hero__content
+          span.home-pill Giao diện chat hiện đại
+          h1 Chat nhanh, gọn, trực quan
+          p Trải nghiệm website chat theo phong cách realtime, tập trung vào tốc độ và sự rõ ràng trong từng cuộc hội thoại.
+          .home-hero__actions
+            a.btn.btn-primary.btn-lg(href="/register") Bắt đầu ngay
+            a.btn.btn-light.btn-lg(href="/login") Đăng nhập
+        .home-hero__card
+          .home-mini-chat
+            .home-mini-chat__head
+              .chat-avatar.is-online BL
+              div
+                strong BlinkChat Room
+                p.mb-0 12 người đang hoạt động
+            .home-mini-chat__msg.is-left Xin chào mọi người 👋
+            .home-mini-chat__msg.is-right Chúng ta họp lúc 10h nhé.
+            .home-mini-chat__msg.is-left Đã rõ, mình vào ngay.
+
+  section.home-features
+    .container
+      .section-heading
+        h2 Tính năng nổi bật
+        p Tối ưu toàn bộ giao diện cho trải nghiệm nhắn tin và cộng tác.
+      .row.g-3
+        .col-md-6.col-xl-3
+          .feature-card
+            i.bi.bi-chat-left-text
+            h3 Chat cá nhân
+            p Giao diện 1-1 gọn gàng, đọc nhanh, phản hồi nhanh.
+        .col-md-6.col-xl-3
+          .feature-card
+            i.bi.bi-people
+            h3 Chat nhóm
+            p Quản lý hội thoại nhiều thành viên với bố cục rõ ràng.
+        .col-md-6.col-xl-3
+          .feature-card
+            i.bi.bi-person-heart
+            h3 Quản lý bạn bè
+            p Theo dõi trạng thái online và mời kết bạn tiện lợi.
+        .col-md-6.col-xl-3
+          .feature-card
+            i.bi.bi-lightning-charge
+            h3 Cảm giác realtime
+            p Typing, unread badge, last message preview trực quan.

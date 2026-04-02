@@ -1,0 +1,12 @@
+article.message-row(class=message.side === "right" ? "is-me" : "")
+  if message.side !== "right"
+    .chat-avatar.chat-avatar--sm= message.senderAvatar
+
+  .message-content
+    if isRoom && message.side !== "right"
+      p.message-sender= message.senderName
+    .message-bubble= message.text
+    .message-meta
+      span= message.time
+      if message.state && message.side === "right"
+        span.message-state= message.state

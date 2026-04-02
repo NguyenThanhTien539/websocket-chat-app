@@ -1,0 +1,39 @@
+extends ../layouts/default.pug
+
+block main
+  main.chat-layout
+    include ../partials/sidebar.pug
+
+    section.chat-list-panel
+      .chat-list-panel__header
+        h2 Cuộc trò chuyện
+        p Danh sách bạn bè đang hoạt động
+      .chat-list
+        each friend in friends
+          include ../partials/friend-card.pug
+      .chat-list-panel__header.mt-3
+        h2.mb-2 Phòng chat nhóm
+      .chat-list
+        each room in rooms
+          include ../partials/room-card.pug
+
+    section.chat-main-panel
+      - const conversation = { avatar: selectedDirectFriend.avatar, name: selectedDirectFriend.name, statusText: "Online • đang nhập..." }
+      - const isRoom = false
+      include ../partials/chat-header.pug
+
+      .chat-messages
+        each message in directMessages
+          include ../partials/message-item.pug
+
+      .typing-row
+        .chat-avatar.chat-avatar--sm= selectedDirectFriend.avatar
+        span= `${selectedDirectFriend.name} đang nhập...`
+
+      form.chat-composer
+        button.btn-icon(type="button")
+          i.bi.bi-emoji-smile
+        button.btn-icon(type="button")
+          i.bi.bi-paperclip
+        input.form-control(type="text" placeholder="Nhập tin nhắn...")
+        button.btn.btn-primary(type="button") Gửi

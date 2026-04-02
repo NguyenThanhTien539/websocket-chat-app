@@ -1,0 +1,50 @@
+extends ../layouts/default.pug
+
+block main
+  main.chat-layout
+    include ../partials/sidebar.pug
+
+    section.chat-list-panel
+      .chat-list-panel__header
+        h2 Danh sách phòng chat
+        p Quản lý phòng nhóm và cuộc trò chuyện theo dự án.
+        button.btn.btn-primary.btn-sm(type="button" data-bs-toggle="modal" data-bs-target="#createRoomModal")
+          i.bi.bi-plus-lg
+          |  Tạo phòng chat
+      .chat-list
+        each room in rooms
+          include ../partials/room-card.pug
+
+    section.chat-main-panel
+      - const conversation = { avatar: rooms[0].avatar, name: rooms[0].name, members: rooms[0].members }
+      - const isRoom = true
+      include ../partials/chat-header.pug
+
+      .chat-messages
+        each message in groupMessages
+          include ../partials/message-item.pug
+
+      form.chat-composer
+        button.btn-icon(type="button")
+          i.bi.bi-emoji-smile
+        button.btn-icon(type="button")
+          i.bi.bi-paperclip
+        input.form-control(type="text" placeholder="Nhập tin nhắn nhóm...")
+        button.btn.btn-primary(type="button") Gửi
+
+  .modal.fade#createRoomModal(tabindex="-1" aria-hidden="true")
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h5.modal-title Tạo phòng chat mới
+          button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+        .modal-body
+          .mb-3
+            label.form-label(for="roomName") Tên phòng
+            input#roomName.form-control(type="text" placeholder="Ví dụ: Team Marketing")
+          .mb-3
+            label.form-label(for="roomDesc") Mô tả ngắn
+            textarea#roomDesc.form-control(rows="3" placeholder="Mục tiêu của phòng chat")
+        .modal-footer
+          button.btn.btn-light(type="button" data-bs-dismiss="modal") Hủy
+          button.btn.btn-primary(type="button") Tạo phòng

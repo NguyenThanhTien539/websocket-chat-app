@@ -1,0 +1,10 @@
+article.list-card
+  .list-card__left
+    .chat-avatar.chat-avatar--room= room.avatar
+    .list-card__info
+      h4= room.name
+      p #{room.members} thành viên • #{room.lastMessage}
+  .list-card__right
+    if room.unread > 0
+      span.chat-badge= room.unread
+    a.btn.btn-sm.btn-primary(href="/chat") Nhắn tin

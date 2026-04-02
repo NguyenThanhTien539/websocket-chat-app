@@ -1,0 +1,11 @@
+article.list-card
+  .list-card__left
+    .chat-avatar(class=user.status === "online" ? "is-online" : "")= user.avatar
+    .list-card__info
+      h4= user.name
+      p= user.bio
+  .list-card__right
+    if user.isFriend
+      a.btn.btn-sm.btn-primary(href="/chat") Nhắn tin
+    else
+      button.btn.btn-sm.btn-outline-primary(type="button") Kết bạn

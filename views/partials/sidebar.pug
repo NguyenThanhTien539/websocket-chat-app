@@ -1,0 +1,21 @@
+aside.chat-sidebar
+  .chat-sidebar__brand
+    a.chat-brand(href="/")
+      span.chat-brand__dot
+      span.chat-brand__name BlinkChat
+
+  nav.chat-sidebar__menu
+    each item in navItems
+      a.chat-menu-item(class=activeMenu === item.key ? "active" : "" href=item.href)
+        i.bi(class=item.icon)
+        span= item.label
+        if item.badge
+          span.chat-badge= item.badge
+
+  .chat-sidebar__user
+    .chat-avatar= currentUser.avatar
+    .chat-sidebar__meta
+      strong= currentUser.name
+      span Online
+    a.chat-logout(href="/login")
+      i.bi.bi-box-arrow-right

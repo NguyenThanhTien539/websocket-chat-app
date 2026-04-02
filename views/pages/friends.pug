@@ -1,0 +1,30 @@
+extends ../layouts/default.pug
+
+block main
+  main.chat-layout
+    include ../partials/sidebar.pug
+
+    section.chat-list-panel
+      .chat-list-panel__header
+        h2 Danh sách bạn bè
+        p Theo dõi trạng thái hoạt động và nhắn tin ngay.
+      .chat-list
+        each friend in friends
+          include ../partials/friend-card.pug
+
+    section.chat-main-panel
+      - const conversation = { avatar: friends[0].avatar, name: friends[0].name, statusText: "Online • đang nhập..." }
+      - const isRoom = false
+      include ../partials/chat-header.pug
+
+      .chat-messages
+        each message in directMessages
+          include ../partials/message-item.pug
+
+      form.chat-composer
+        button.btn-icon(type="button")
+          i.bi.bi-emoji-smile
+        button.btn-icon(type="button")
+          i.bi.bi-paperclip
+        input.form-control(type="text" placeholder="Nhập tin nhắn...")
+        button.btn.btn-primary(type="button") Gửi

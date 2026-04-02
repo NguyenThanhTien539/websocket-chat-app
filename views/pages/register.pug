@@ -1,0 +1,21 @@
+extends ../layouts/default.pug
+
+block main
+  main.auth-page
+    .auth-card
+      h1 Tạo tài khoản mới
+      p Bắt đầu nhắn tin và kết nối cùng bạn bè.
+      form.auth-form
+        .mb-3
+          label.form-label(for="fullName") Họ và tên
+          input#fullName.form-control(type="text" placeholder="Nguyen Van A")
+        .mb-3
+          label.form-label(for="email") Email
+          input#email.form-control(type="email" placeholder="ban@blinkchat.app")
+        .mb-3
+          label.form-label(for="password") Mật khẩu
+          input#password.form-control(type="password" placeholder="Tối thiểu 8 ký tự")
+        button.btn.btn-primary.w-100(type="button") Đăng ký
+      p.auth-switch
+        | Đã có tài khoản?
+        a(href="/login") Đăng nhập

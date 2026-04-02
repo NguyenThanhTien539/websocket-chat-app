@@ -1,0 +1,30 @@
+doctype html
+html
+  head
+    title #{pageTitle}
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    link(rel="preconnect" href="https://fonts.googleapis.com")
+    link(rel="preconnect" href="https://fonts.gstatic.com" crossorigin)
+    link(rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap")
+    link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css")
+    link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css")
+    link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css")
+    link(rel="stylesheet", href="/css/style.css")
+    if (pageStyles)
+      each file in pageStyles
+        link(rel="stylesheet", href=`/css/${file}`)
+
+  body
+    if (showChrome !== false && showSidebar !== true)
+      include ../partials/header.pug
+
+    block main
+
+    if (showChrome !== false && showSidebar !== true)
+      include ../partials/footer.pug
+
+    script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js")
+    if (pageScripts)
+      each file in pageScripts
+        script(src=`/js/${file}`)

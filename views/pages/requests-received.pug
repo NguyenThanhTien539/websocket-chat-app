@@ -1,0 +1,19 @@
+extends ../layouts/default.pug
+
+block main
+  main.chat-layout
+    include ../partials/sidebar.pug
+
+    section.chat-list-panel
+      .chat-list-panel__header
+        h2 Lời mời đã nhận
+        p Chấp nhận hoặc từ chối lời mời kết bạn.
+      .chat-list
+        each request in receivedRequests
+          - const mode = "received"
+          include ../partials/request-card.pug
+
+    section.chat-main-panel
+      - const title = "Quản lý lời mời"
+      - const description = "Chọn người dùng bên trái để xem chi tiết và thao tác nhanh."
+      include ../partials/empty-state.pug

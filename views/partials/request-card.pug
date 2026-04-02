@@ -1,0 +1,12 @@
+article.list-card
+  .list-card__left
+    .chat-avatar= request.avatar
+    .list-card__info
+      h4= request.name
+      p= request.statusLabel
+  .list-card__right
+    if mode === "received"
+      button.btn.btn-sm.btn-primary(type="button") Chấp nhận
+      button.btn.btn-sm.btn-light(type="button") Từ chối
+    else
+      button.btn.btn-sm.btn-outline-secondary(type="button") Hủy lời mời
