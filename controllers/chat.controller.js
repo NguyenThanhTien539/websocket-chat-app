@@ -187,6 +187,10 @@ function dashboardViewData() {
 }
 
 module.exports.dashboardPage = (req, res) => {
+  _io.on("connection", (socket) => {
+    console.log("a user connected", socket.id);
+  });
+
   res.render("pages/dashboard", dashboardViewData());
 };
 
@@ -214,7 +218,8 @@ module.exports.roomsPage = (req, res) => {
 };
 
 module.exports.roomDetailPage = (req, res) => {
-  const selectedRoom = rooms.find((room) => room.id === req.params.roomId) || rooms[0];
+  const selectedRoom =
+    rooms.find((room) => room.id === req.params.roomId) || rooms[0];
 
   res.render("pages/rooms", {
     ...commonData("rooms"),

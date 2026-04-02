@@ -4,6 +4,11 @@ require("dotenv").config();
 const app = express();
 const port = process.env.PORT;
 const path = require("path");
+const http = require("http");
+const { Server } = require("socket.io");
+const server = http.createServer(app);
+const io = new Server(server);
+
 const cookieParser = require("cookie-parser");
 const databaseConfig = require("./config/database.config");
 const indexRoute = require("./routes/index.route");
@@ -14,10 +19,12 @@ app.set("view engine", "pug"); // template engine sử dụng: pug
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public"))); // Thiết lập thư mục chứa file tĩnh
 
+global._io = io; // Đặt io lên global để có thể sử dụng trong controller
+
 databaseConfig.connect();
 
 app.use("/", indexRoute);
 
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server is running on: http://localhost:${port}`);
 });

@@ -2,8 +2,9 @@ const express = require("express");
 const router = express.Router();
 
 const chatController = require("../controllers/chat.controller");
+const authMiddleware = require("../middleware/auth.middleware");
 
-router.get("/", chatController.dashboardPage);
+router.get("/", authMiddleware.requireAuth, chatController.dashboardPage);
 
 router.get("/discover", chatController.discoverPage);
 

@@ -37,7 +37,7 @@ if (loginForm) {
         .then((data) => {
           if (data.code == "success") {
             setNotificationInSession(data.code, data.message);
-            window.location.href = `/`;
+            window.location.href = `/chat`;
           } else {
             notify.error(data.message);
           }
