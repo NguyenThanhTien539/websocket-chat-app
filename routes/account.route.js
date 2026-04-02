@@ -3,8 +3,14 @@ const router = express.Router();
 
 const accountController = require("../controllers/account.controller");
 
-router.post("/login", accountController.login);
+router.get("/login", accountController.login);
 
-router.post("/register", accountController.register);
+router.post("/login", accountController.loginPost);
+
+router.get("/register", accountController.register);
+
+router.post("/register", accountController.registerPost);
+
+router.get("/logout", accountController.logout);
 
 module.exports = router;

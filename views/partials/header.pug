@@ -6,5 +6,11 @@ header.site-header
         span BlinkChat
 
       nav.site-nav
-        a.site-nav__link(href="/login") Đăng nhập
-        a.btn.btn-primary.btn-sm(href="/register") Đăng ký
+        if !user
+          a.site-nav__link(href="/account/login") Đăng nhập
+          a.btn.btn-primary.btn-sm(href="/account/register") Đăng ký
+        else
+          span.site-nav__user
+            i.fa.fa-user(aria-hidden="true" style="color: #4e9af1; margin-right: 6px;")
+            | #{user.fullName}
+          a.site-nav__link(href="/account/logout") Đăng xuất

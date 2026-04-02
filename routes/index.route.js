@@ -2,13 +2,13 @@ const express = require("express");
 const router = express.Router();
 
 const uiController = require("../controllers/ui.controller");
-
+const authMiddleware = require("../middleware/auth.middleware");
 const accountRoutes = require("./account.route");
+
 router.use("/account", accountRoutes);
 
-router.get("/", uiController.homePage);
-router.get("/login", uiController.loginPage);
-router.get("/register", uiController.registerPage);
+router.get("/", authMiddleware.infoUser, uiController.homePage);
+
 router.get("/users", uiController.usersPage);
 router.get("/friends", uiController.friendsPage);
 router.get("/requests-sent", uiController.requestsSentPage);
