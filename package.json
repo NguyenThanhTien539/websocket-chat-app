@@ -1,0 +1,10 @@
+{
+  "name": "websocket-chat-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "NguyenThanhTien539 <161334882+NguyenThanhTien539@users.noreply.github.com>",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
