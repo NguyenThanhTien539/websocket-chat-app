@@ -11,8 +11,9 @@ block main
           a(href="/chat/requests/received") See all
 
         .users-grid
-          if receivedRequests && receivedRequests.length
-            each request in receivedRequests
+          if friendRequests && friendRequests.length
+            each request in friendRequests
+
               - const requestAvatar = request.avatar || ""
               - const requestAvatarIsImage = requestAvatar && (requestAvatar.includes("http") || requestAvatar.includes("/") || requestAvatar.includes(".jpg") || requestAvatar.includes(".jpeg") || requestAvatar.includes(".png") || requestAvatar.includes(".webp"))
               - const requestAvatarSrc = requestAvatar.includes("http") || requestAvatar.includes("/") ? requestAvatar : `/uploads/${requestAvatar}`
@@ -24,7 +25,7 @@ block main
                     .people-card__placeholder
                       i.fa-solid.fa-user
                 .people-card__body
-                  h3= request.name || "Unknown user"
+                  h3= request.fullName
                   p
                     i.fa-solid.fa-user-group
                     span= request.statusLabel || "New request"
@@ -43,11 +44,12 @@ block main
           a(href="/chat/discover") See all
 
         .users-grid
-          if users && users.length
-            each user in users
-              - const displayName = user.fullName || user.name || user.username || "Unknown user"
-              - const mutualInfo = user.mutualFriendsLabel || user.bio || "1 mutual friend"
-              - const userAvatar = user.avatar || ""
+          if strangers && strangers.length
+            each stranger in strangers
+              - const userId =  stranger.id
+              - const displayName = stranger.fullName
+              - const mutualInfo = stranger.mutualFriendsLabel || stranger.bio || "1 mutual friend"
+              - const userAvatar = stranger.avatar || ""
               - const userAvatarIsImage = userAvatar && (userAvatar.includes("http") || userAvatar.includes("/") || userAvatar.includes(".jpg") || userAvatar.includes(".jpeg") || userAvatar.includes(".png") || userAvatar.includes(".webp"))
               - const userAvatarSrc = userAvatar.includes("http") || userAvatar.includes("/") ? userAvatar : `/uploads/${userAvatar}`
               article.people-card
@@ -63,7 +65,17 @@ block main
                     i.fa-solid.fa-user-group
                     span= mutualInfo
                   .people-card__actions
-                    a.btn.btn-primary(href="/chat/ai") Add friend
-                    button.btn.btn-light(type="button") Remove
+                    button.btn.btn-primary.add-friend-btn(
+                      type="button"
+                      data-user-id=userId
+                    ) Add friend
+                    button.btn.btn-light.remove-friend-btn(
+                      type="button"
+                      data-user-id=userId
+                    ) Remove
+                    button.btn.btn-secondary.cancel-friend-btn(
+                      type="button"
+                      data-user-id=userId
+                    ) Cancel
           else
             p.users-empty No suggestion users available.

@@ -194,9 +194,50 @@ module.exports.dashboardPage = (req, res) => {
 };
 
 module.exports.discoverPage = async (req, res) => {
-  const users = await Account.find();
-  console.log("Users in discover page:", users);
-  res.render("pages/users", { ...commonData("discover"), users: users });
+  const strangers = await Account.find({
+    $and: [
+      { _id: { $ne: req.account.id } },
+      { acceptedFriends: { $nin: req.account.id } },
+      { requestedFriends: { $nin: req.account.id } },
+    ],
+  });
+
+  const friendRequests = await Account.find({
+    _id: { $in: req.account.requestedFriends },
+  });
+  _io.once("connection", (socket) => {
+    socket.on("CLIENT_SEND_FRIEND_REQUEST", async (data) => {
+      //Add userA to userB's friend list
+      const existAInB = await Account.findOne({
+        _id: data.toUserId,
+        acceptedFriends: req.account.id,
+      });
+
+      if (!existAInB) {
+        await Account.updateOne(
+          { _id: data.toUserId },
+          { $push: { acceptedFriends: req.account.id } },
+        );
+      }
+
+      // Add userB to userA's requestedFriends list
+      const existBInA = await Account.findOne({
+        _id: req.account.id,
+        requestedFriends: data.toUserId,
+      });
+      if (!existBInA) {
+        await Account.updateOne(
+          { _id: req.account.id },
+          { $push: { requestedFriends: data.toUserId } },
+        );
+      }
+    });
+  });
+  res.render("pages/users", {
+    ...commonData("discover"),
+    strangers: strangers,
+    friendRequests: friendRequests,
+  });
 };
 
 module.exports.friendsPage = (req, res) => {
@@ -214,12 +255,52 @@ module.exports.friendsPage = (req, res) => {
   res.render("pages/friends", commonData("friends"));
 };
 
-module.exports.requestsSentPage = (req, res) => {
-  res.render("pages/requests-sent", commonData("requests-sent"));
+module.exports.requestsSentPage = async (req, res) => {
+  const sendRequests = await Account.find({
+    _id: { $in: req.account.requestedFriends },
+  });
+  _io.once("connection", (socket) => {
+    socket.on("CLIENT_CANCEL_FRIEND_REQUEST", async (data) => {
+      // Remove userA from userB's friend list
+      const existAInB = await Account.findOne({
+        _id: data.toUserId,
+        acceptedFriends: req.account.id,
+      });
+
+      if (existAInB) {
+        await Account.updateOne(
+          { _id: data.toUserId },
+          { $pull: { acceptedFriends: req.account.id } },
+        );
+      }
+
+      // Remove userB from userA's requestedFriends list
+      const existBInA = await Account.findOne({
+        _id: req.account.id,
+        requestedFriends: data.toUserId,
+      });
+      if (existBInA) {
+        await Account.updateOne(
+          { _id: req.account.id },
+          { $pull: { requestedFriends: data.toUserId } },
+        );
+      }
+    });
+  });
+  res.render("pages/requests-sent", {
+    ...commonData("requests-sent"),
+    users: sendRequests,
+  });
 };
 
-module.exports.requestsReceivedPage = (req, res) => {
-  res.render("pages/requests-received", commonData("requests-received"));
+module.exports.requestsReceivedPage = async (req, res) => {
+  const receivedRequests = await Account.find({
+    _id: { $in: req.account.acceptedFriends },
+  });
+  res.render("pages/requests-received", {
+    ...commonData("requests-received"),
+    users: receivedRequests,
+  });
 };
 
 module.exports.roomsPage = (req, res) => {

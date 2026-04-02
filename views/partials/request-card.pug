@@ -9,4 +9,4 @@ article.list-card
       button.btn.btn-sm.btn-primary(type="button") Chấp nhận
       button.btn.btn-sm.btn-light(type="button") Từ chối
     else
-      button.btn.btn-sm.btn-outline-secondary(type="button") Hủy lời mời
+      button.btn.btn-sm.btn-outline-secondary.cancel-friend-btn(type="button" data-user-id=(request._id || request.id)) Hủy lời mời

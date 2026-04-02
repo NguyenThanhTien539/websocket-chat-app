@@ -6,6 +6,9 @@ const schema = new mongoose.Schema(
     email: String,
     password: String,
     avatar: String,
+    acceptedFriends: Array,
+    requestedFriends: Array,
+    friendList: Array,
   },
   {
     timestamps: true,

@@ -9,9 +9,20 @@ block main
         h2 Lời mời đã nhận
         p Chấp nhận hoặc từ chối lời mời kết bạn.
       .chat-list
-        each request in receivedRequests
+        each user in users
           - const mode = "received"
-          include ../partials/request-card.pug
+          article.list-card
+            .list-card__left
+              .chat-avatar= user.avatar
+              .list-card__info
+                h4= user.fullName
+                p= user.statusLabel
+            .list-card__right
+              if mode === "received"
+                button.btn.btn-sm.btn-primary(type="button") Chấp nhận
+                button.btn.btn-sm.btn-light(type="button") Từ chối
+              else
+                button.btn.btn-sm.btn-outline-secondary(type="button") Hủy lời mời
 
     section.chat-main-panel
       - const title = "Quản lý lời mời"

@@ -6,7 +6,11 @@ const authMiddleware = require("../middleware/auth.middleware");
 
 router.get("/", authMiddleware.requireAuth, chatController.dashboardPage);
 
-router.get("/discover", chatController.discoverPage);
+router.get(
+  "/discover",
+  authMiddleware.requireAuth,
+  chatController.discoverPage,
+);
 
 router.get("/friends", authMiddleware.requireAuth, chatController.friendsPage);
 

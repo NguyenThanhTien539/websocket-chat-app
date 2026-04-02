@@ -237,6 +237,19 @@
   border-color: #d1d5db;
 }
 
+.people-card__actions .cancel-friend-btn {
+  display: none;
+}
+
+.people-card__body.add .add-friend-btn,
+.people-card__body.add .remove-friend-btn {
+  display: none;
+}
+
+.people-card__body.add .cancel-friend-btn {
+  display: inline-block;
+}
+
 .users-section__footer {
   margin-top: 10px;
   text-align: center;

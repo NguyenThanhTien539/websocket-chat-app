@@ -26,25 +26,26 @@ module.exports.infoUser = async (req, res, next) => {
 module.exports.requireAuth = async (req, res, next) => {
   try {
     const token = req.cookies.token;
+
     if (!token) {
       return res.redirect("/");
     }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded) {
-      return res.redirect("/");
-    }
+
     const user = await Account.findOne({ email: decoded.email });
     if (!user) {
       res.clearCookie("token");
       return res.redirect("/");
     }
+
     res.locals.user = user;
-    req.account = user; // Attach user to request object for later use
-    next();
+    req.account = user;
+
+    return next();
   } catch (error) {
     console.error("Error in requireAuth middleware:", error);
+    res.clearCookie("token");
     return res.redirect("/");
   }
-
-  next();
 };
