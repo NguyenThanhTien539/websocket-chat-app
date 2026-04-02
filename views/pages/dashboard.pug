@@ -1,0 +1,141 @@
+extends ../layouts/default.pug
+
+block main
+  main.chat-layout
+    include ../partials/sidebar.pug
+
+    section.chat-dashboard
+      - const onlineFriends = friends.filter((friend) => friend.status === "online")
+      - const recentConversations = friends.slice(0, 4)
+      - const recentRooms = rooms.slice(0, 4)
+      - const spotlightUsers = users.slice(0, 3)
+      - const activeFriend = selectedDirectFriend || friends[0] || { name: "một người bạn" }
+
+      .chat-dashboard__top
+        article.dashboard-hero
+          .dashboard-hero__content
+            p.dashboard-hero__eyebrow AI Communication Center
+            h2= `Xin chào ${currentUser.name}, hôm nay mình ưu tiên luồng nào?`
+            p.dashboard-hero__subtitle= `Bạn có ${directMessages.length + groupMessages.length} tín hiệu chat mới, ${onlineFriends.length} bạn đang online và ${receivedRequests.length} lời mời cần phản hồi.`
+            .dashboard-hero__actions
+              a.btn.btn-primary.dashboard-btn(href="/chat/friends")
+                i.bi.bi-chat-dots
+                span Mở hội thoại cá nhân
+              a.btn.dashboard-btn.dashboard-btn--ghost(href="/chat/rooms")
+                i.bi.bi-collection
+                span Vào không gian nhóm
+          .dashboard-hero__badges
+            .hero-kpi
+              span.hero-kpi__label Tập trung hiện tại
+              strong.hero-kpi__value 86%
+              p.hero-kpi__hint Cao hơn hôm qua +12%
+            .hero-kpi
+              span.hero-kpi__label Tin cần xử lý
+              strong.hero-kpi__value= directMessages.length + groupMessages.length
+              p.hero-kpi__hint Luồng ưu tiên đã được gợi ý
+            .hero-kpi
+              span.hero-kpi__label Phản hồi nhanh
+              strong.hero-kpi__value 04m
+              p.hero-kpi__hint Thời gian trả lời trung bình
+
+        aside.dashboard-control
+          h3 Copilot trạng thái
+          p.dashboard-control__sub Đề xuất theo hoạt động chat gần nhất của bạn.
+          ul.dashboard-control__list
+            li
+              span Ưu tiên 1
+              strong= `Tiếp tục hội thoại với ${activeFriend.name}`
+            li
+              span Ưu tiên 2
+              strong= `${receivedRequests.length} lời mời mới chờ phản hồi`
+            li
+              span Ưu tiên 3
+              strong= `${rooms.length} phòng đang có hoạt động`
+          a.btn.btn-light.dashboard-control__cta(href="/chat/ai")
+            i.bi.bi-magic
+            span Mở AI chat workflow
+
+      .chat-dashboard__metrics
+        a.metric-tile(href="/chat/friends")
+          span.metric-tile__title Bạn bè online
+          strong.metric-tile__value= onlineFriends.length
+          p.metric-tile__desc Tương tác realtime đang hoạt động ổn định
+        a.metric-tile(href="/chat/requests/received")
+          span.metric-tile__title Lời mời mới
+          strong.metric-tile__value= receivedRequests.length
+          p.metric-tile__desc Cần xử lý để mở rộng mạng kết nối
+        a.metric-tile(href="/chat/rooms")
+          span.metric-tile__title Nhóm đang bật
+          strong.metric-tile__value= recentRooms.length
+          p.metric-tile__desc Các room có cập nhật trong phiên gần đây
+        a.metric-tile(href="/chat/discover")
+          span.metric-tile__title Gợi ý kết nối
+          strong.metric-tile__value= users.length
+          p.metric-tile__desc Danh sách user phù hợp để bắt đầu trò chuyện
+
+      .chat-dashboard__grid
+        article.dashboard-panel
+          .dashboard-panel__head
+            h3 Luồng trò chuyện gần đây
+            a(href="/chat/friends") Xem tất cả
+          .dashboard-feed
+            each friend in recentConversations
+              a.dashboard-feed__item(href="/chat/friends")
+                .dashboard-feed__left
+                  .chat-avatar(class=friend.status === "online" ? "is-online" : "")= friend.avatar
+                  .dashboard-feed__meta
+                    h4= friend.name
+                    p= friend.lastMessage || "Bắt đầu cuộc trò chuyện mới"
+                span.dashboard-pill(class=friend.status === "online" ? "is-online" : "is-offline")= friend.status
+
+        article.dashboard-panel
+          .dashboard-panel__head
+            h3 Nhịp phòng chat
+            a(href="/chat/rooms") Quản lý phòng
+          .dashboard-rooms
+            each room in recentRooms
+              a.dashboard-rooms__item(href="/chat/rooms")
+                .dashboard-rooms__row
+                  .chat-avatar.chat-avatar--room= room.avatar
+                  .dashboard-feed__meta
+                    h4= room.name
+                    p= `${room.members} thành viên`
+                  if room.unread > 0
+                    span.chat-badge= room.unread
+                p.dashboard-rooms__message= room.lastMessage
+
+        article.dashboard-panel
+          .dashboard-panel__head
+            h3 Spotlight user
+            a(href="/chat/discover") Mở danh sách
+          .dashboard-users
+            each user in spotlightUsers
+              .dashboard-users__item
+                .dashboard-feed__left
+                  .chat-avatar(class=user.status === "online" ? "is-online" : "")= user.avatar
+                  .dashboard-feed__meta
+                    h4= user.name
+                    p= user.bio
+                a.btn.btn-sm.btn-light(href="/chat/discover") Kết nối
+
+        article.dashboard-panel
+          .dashboard-panel__head
+            h3 AI gợi ý hành động
+            a(href="/chat/ai") Mở chat
+          .dashboard-suggestions
+            a.dashboard-suggestions__item(href="/chat/ai")
+              i.bi.bi-lightning-charge
+              div
+                h4 Tạo phản hồi nhanh cho lời mời mới
+                p Tự động hóa nội dung trả lời theo ngữ cảnh quan hệ.
+            a.dashboard-suggestions__item(href="/chat/rooms")
+              i.bi.bi-diagram-3
+              div
+                h4 Tổng hợp hoạt động từ phòng chat
+                p Gom nhóm thông tin nổi bật từ các room nhiều tương tác.
+            a.dashboard-suggestions__item(href="/chat/friends")
+              i.bi.bi-stars
+              div
+                h4 Cá nhân hóa danh sách ưu tiên chat
+                p Sắp xếp hội thoại theo tần suất và tín hiệu online mới nhất.
+

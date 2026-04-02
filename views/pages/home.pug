@@ -9,7 +9,10 @@ block main
           h1 Chat nhanh, gọn, trực quan
           p Trải nghiệm website chat theo phong cách realtime, tập trung vào tốc độ và sự rõ ràng trong từng cuộc hội thoại.
           .home-hero__actions
-            a.btn.btn-primary.btn-lg(href="/register") Bắt đầu ngay
+            if user
+              a.btn.btn-primary.btn-lg(href="/chat") Bắt đầu ngay
+            else
+              a.btn.btn-primary.btn-lg(href="/register") Bắt đầu ngay
             a.btn.btn-light.btn-lg(href="/login") Đăng nhập
         .home-hero__card
           .home-mini-chat
@@ -48,3 +51,4 @@ block main
             i.bi.bi-lightning-charge
             h3 Cảm giác realtime
             p Typing, unread badge, last message preview trực quan.
+

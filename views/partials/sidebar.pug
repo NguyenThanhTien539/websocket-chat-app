@@ -1,21 +1,48 @@
-aside.chat-sidebar
-  .chat-sidebar__brand
-    a.chat-brand(href="/")
-      span.chat-brand__dot
-      span.chat-brand__name BlinkChat
+nav.sider
+  a.sider-brand(href="/chat")
+    i.fa-solid.fa-bolt
+    span BlinkChat
 
-  nav.chat-sidebar__menu
-    each item in navItems
-      a.chat-menu-item(class=activeMenu === item.key ? "active" : "" href=item.href)
-        i.bi(class=item.icon)
-        span= item.label
-        if item.badge
-          span.chat-badge= item.badge
+  ul.inner-menu
+    li
+      a(class=activeMenu === "dashboard" ? "active" : "" href="/chat")
+        i.fa-solid.fa-gauge-high
+        span Tổng quan
+    li
+      a(class=activeMenu === "discover" ? "active" : "" href="/chat/discover")
+        i.fa-solid.fa-users
+        span Người dùng
+    li
+      a(class=activeMenu === "friends" ? "active" : "" href="/chat/friends")
+        i.fa-solid.fa-user-group
+        span Bạn bè
+    li
+      a(class=activeMenu === "requests-sent" ? "active" : "" href="/chat/requests/sent")
+        i.fa-solid.fa-paper-plane
+        span Lời mời đã gửi
+    li
+      a(class=activeMenu === "requests-received" ? "active" : "" href="/chat/requests/received")
+        i.fa-solid.fa-user-plus
+        span Lời mời đã nhận
+    li
+      a(class=activeMenu === "rooms" ? "active" : "" href="/chat/rooms")
+        i.fa-solid.fa-comments
+        span Phòng chat
 
-  .chat-sidebar__user
-    .chat-avatar= currentUser.avatar
-    .chat-sidebar__meta
-      strong= currentUser.name
-      span Online
-    a.chat-logout(href="/login")
-      i.bi.bi-box-arrow-right
+  hr
+
+  ul.inner-menu
+    li
+      a(class=activeMenu === "ai" ? "active" : "" href="/chat/ai")
+        i.fa-solid.fa-wand-magic-sparkles
+        span AI chat
+    li
+      a(href="/")
+        i.fa-solid.fa-house
+        span Trang chủ
+    li
+      a(href="/login")
+        i.fa-solid.fa-power-off
+        span Đăng xuất
+
+.sider-overlay

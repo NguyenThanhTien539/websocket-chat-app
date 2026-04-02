@@ -7,4 +7,5 @@ article.list-card
   .list-card__right
     if room.unread > 0
       span.chat-badge= room.unread
-    a.btn.btn-sm.btn-primary(href="/chat") Nhắn tin
+    a.btn.btn-sm.btn-primary(href=`/chat/rooms/${room.id}`) Nhắn tin
+

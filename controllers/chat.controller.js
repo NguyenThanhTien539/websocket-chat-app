@@ -162,35 +162,6 @@ const groupMessages = [
   },
 ];
 
-const navItems = [
-  { label: "Người dùng", href: "/users", key: "users", icon: "bi-people" },
-  {
-    label: "Bạn bè",
-    href: "/friends",
-    key: "friends",
-    icon: "bi-person-heart",
-  },
-  {
-    label: "Lời mời đã gửi",
-    href: "/requests-sent",
-    key: "requests-sent",
-    icon: "bi-send",
-  },
-  {
-    label: "Lời mời đã nhận",
-    href: "/requests-received",
-    key: "requests-received",
-    icon: "bi-person-plus",
-    badge: receivedRequests.length,
-  },
-  {
-    label: "Phòng chat",
-    href: "/rooms",
-    key: "rooms",
-    icon: "bi-chat-left-text",
-  },
-];
-
 function commonData(activeMenu) {
   return {
     pageTitle: "BlinkChat UI",
@@ -202,36 +173,25 @@ function commonData(activeMenu) {
     rooms,
     directMessages,
     groupMessages,
-    navItems,
     activeMenu,
     showSidebar: true,
     pageStyles: ["chat.css"],
   };
 }
+function dashboardViewData() {
+  return {
+    ...commonData("dashboard"),
+    pageTitle: "Dashboard - BlinkChat",
+    selectedDirectFriend: friends[0] || null,
+  };
+}
 
-module.exports.homePage = (req, res) => {
-  res.render("pages/home", {
-    pageTitle: "BlinkChat - Home",
-    pageStyles: ["home.css"],
-  });
+module.exports.dashboardPage = (req, res) => {
+  res.render("pages/dashboard", dashboardViewData());
 };
 
-module.exports.loginPage = (req, res) => {
-  res.render("pages/login", {
-    pageTitle: "Đăng nhập - BlinkChat",
-    pageStyles: ["auth.css"],
-  });
-};
-
-module.exports.registerPage = (req, res) => {
-  res.render("pages/register", {
-    pageTitle: "Đăng ký - BlinkChat",
-    pageStyles: ["auth.css"],
-  });
-};
-
-module.exports.usersPage = (req, res) => {
-  res.render("pages/users", commonData("users"));
+module.exports.discoverPage = (req, res) => {
+  res.render("pages/users", commonData("discover"));
 };
 
 module.exports.friendsPage = (req, res) => {
@@ -247,12 +207,24 @@ module.exports.requestsReceivedPage = (req, res) => {
 };
 
 module.exports.roomsPage = (req, res) => {
-  res.render("pages/rooms", commonData("rooms"));
+  res.render("pages/rooms", {
+    ...commonData("rooms"),
+    selectedRoom: rooms[0],
+  });
 };
 
-module.exports.chatPage = (req, res) => {
+module.exports.roomDetailPage = (req, res) => {
+  const selectedRoom = rooms.find((room) => room.id === req.params.roomId) || rooms[0];
+
+  res.render("pages/rooms", {
+    ...commonData("rooms"),
+    selectedRoom,
+  });
+};
+
+module.exports.aiPage = (req, res) => {
   res.render("pages/chat", {
-    ...commonData("friends"),
+    ...commonData("ai"),
     pageTitle: "Chat - BlinkChat",
     selectedDirectFriend: friends[0],
     selectedRoom: rooms[0],

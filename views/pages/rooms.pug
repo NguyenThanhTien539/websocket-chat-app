@@ -16,7 +16,8 @@ block main
           include ../partials/room-card.pug
 
     section.chat-main-panel
-      - const conversation = { avatar: rooms[0].avatar, name: rooms[0].name, members: rooms[0].members }
+      - const activeRoom = selectedRoom || rooms[0]
+      - const conversation = { avatar: activeRoom.avatar, name: activeRoom.name, members: activeRoom.members }
       - const isRoom = true
       include ../partials/chat-header.pug
 
