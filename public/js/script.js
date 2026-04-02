@@ -123,7 +123,7 @@ if (registerForm) {
         .then((data) => {
           if (data.code == "success") {
             setNotificationInSession(data.code, data.message);
-            window.location.href = `/login`;
+            window.location.href = `/account/login`;
           } else {
             notify.error(data.message);
           }

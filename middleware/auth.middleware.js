@@ -23,7 +23,7 @@ module.exports.infoUser = async (req, res, next) => {
   next();
 };
 
-module.exports.requireAuth = (req, res, next) => {
+module.exports.requireAuth = async (req, res, next) => {
   try {
     const token = req.cookies.token;
     if (!token) {
@@ -33,12 +33,13 @@ module.exports.requireAuth = (req, res, next) => {
     if (!decoded) {
       return res.redirect("/");
     }
-    const user = Account.findOne({ email: decoded.email });
+    const user = await Account.findOne({ email: decoded.email });
     if (!user) {
       res.clearCookie("token");
       return res.redirect("/");
     }
     res.locals.user = user;
+    req.account = user; // Attach user to request object for later use
     next();
   } catch (error) {
     console.error("Error in requireAuth middleware:", error);

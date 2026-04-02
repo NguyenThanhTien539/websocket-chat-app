@@ -8,16 +8,28 @@ router.get("/", authMiddleware.requireAuth, chatController.dashboardPage);
 
 router.get("/discover", chatController.discoverPage);
 
-router.get("/friends", chatController.friendsPage);
+router.get("/friends", authMiddleware.requireAuth, chatController.friendsPage);
 
-router.get("/requests/sent", chatController.requestsSentPage);
+router.get(
+  "/requests/sent",
+  authMiddleware.requireAuth,
+  chatController.requestsSentPage,
+);
 
-router.get("/requests/received", chatController.requestsReceivedPage);
+router.get(
+  "/requests/received",
+  authMiddleware.requireAuth,
+  chatController.requestsReceivedPage,
+);
 
-router.get("/rooms", chatController.roomsPage);
+router.get("/rooms", authMiddleware.requireAuth, chatController.roomsPage);
 
-router.get("/rooms/:roomId", chatController.roomDetailPage);
+router.get(
+  "/rooms/:roomId",
+  authMiddleware.requireAuth,
+  chatController.roomDetailPage,
+);
 
-router.get("/ai", chatController.aiPage);
+router.get("/ai", authMiddleware.requireAuth, chatController.aiPage);
 
 module.exports = router;

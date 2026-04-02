@@ -4,18 +4,66 @@ block main
   main.chat-layout
     include ../partials/sidebar.pug
 
-    section.chat-list-panel
-      .chat-list-panel__header
-        h2 Danh sách người dùng
-        p Khám phá và kết nối với người dùng mới.
-      .chat-list
-        each user in users
-          include ../partials/user-card.pug
+    section.users-discover
+      .users-section
+        .users-section__head
+          h2 Friend requests
+          a(href="/chat/requests/received") See all
 
-    section.chat-main-panel
-      - const conversation = { avatar: "BC", name: "BlinkChat Assistant", statusText: "Chọn người dùng để mở cuộc trò chuyện" }
-      - const isRoom = false
-      include ../partials/chat-header.pug
-      - const title = "Chưa có cuộc trò chuyện"
-      - const description = "Chọn một người dùng ở cột giữa để bắt đầu nhắn tin 1-1."
-      include ../partials/empty-state.pug
+        .users-grid
+          if receivedRequests && receivedRequests.length
+            each request in receivedRequests
+              - const requestAvatar = request.avatar || ""
+              - const requestAvatarIsImage = requestAvatar && (requestAvatar.includes("http") || requestAvatar.includes("/") || requestAvatar.includes(".jpg") || requestAvatar.includes(".jpeg") || requestAvatar.includes(".png") || requestAvatar.includes(".webp"))
+              - const requestAvatarSrc = requestAvatar.includes("http") || requestAvatar.includes("/") ? requestAvatar : `/uploads/${requestAvatar}`
+              article.people-card
+                .people-card__media
+                  if requestAvatarIsImage
+                    img(src=requestAvatarSrc alt=request.name loading="lazy")
+                  else
+                    .people-card__placeholder
+                      i.fa-solid.fa-user
+                .people-card__body
+                  h3= request.name || "Unknown user"
+                  p
+                    i.fa-solid.fa-user-group
+                    span= request.statusLabel || "New request"
+                  .people-card__actions
+                    button.btn.btn-primary(type="button") Confirm
+                    button.btn.btn-light(type="button") Delete
+          else
+            p.users-empty No friend requests right now.
+
+        .users-section__footer
+          a(href="/chat/requests/received") See More
+
+      .users-section
+        .users-section__head
+          h2 People you may know
+          a(href="/chat/discover") See all
+
+        .users-grid
+          if users && users.length
+            each user in users
+              - const displayName = user.fullName || user.name || user.username || "Unknown user"
+              - const mutualInfo = user.mutualFriendsLabel || user.bio || "1 mutual friend"
+              - const userAvatar = user.avatar || ""
+              - const userAvatarIsImage = userAvatar && (userAvatar.includes("http") || userAvatar.includes("/") || userAvatar.includes(".jpg") || userAvatar.includes(".jpeg") || userAvatar.includes(".png") || userAvatar.includes(".webp"))
+              - const userAvatarSrc = userAvatar.includes("http") || userAvatar.includes("/") ? userAvatar : `/uploads/${userAvatar}`
+              article.people-card
+                .people-card__media
+                  if userAvatarIsImage
+                    img(src=userAvatarSrc alt=displayName loading="lazy")
+                  else
+                    .people-card__placeholder
+                      i.fa-solid.fa-user
+                .people-card__body
+                  h3= displayName
+                  p
+                    i.fa-solid.fa-user-group
+                    span= mutualInfo
+                  .people-card__actions
+                    a.btn.btn-primary(href="/chat/ai") Add friend
+                    button.btn.btn-light(type="button") Remove
+          else
+            p.users-empty No suggestion users available.

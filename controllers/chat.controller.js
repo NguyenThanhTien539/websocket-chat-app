@@ -1,3 +1,6 @@
+const { Account } = require("../models/account.model");
+const { Chat } = require("../models/Chat.model");
+
 const currentUser = {
   id: "u0",
   name: "Tien Nguyen",
@@ -187,18 +190,27 @@ function dashboardViewData() {
 }
 
 module.exports.dashboardPage = (req, res) => {
-  _io.on("connection", (socket) => {
-    console.log("a user connected", socket.id);
-  });
-
   res.render("pages/dashboard", dashboardViewData());
 };
 
-module.exports.discoverPage = (req, res) => {
-  res.render("pages/users", commonData("discover"));
+module.exports.discoverPage = async (req, res) => {
+  const users = await Account.find();
+  console.log("Users in discover page:", users);
+  res.render("pages/users", { ...commonData("discover"), users: users });
 };
 
 module.exports.friendsPage = (req, res) => {
+  _io.once("connection", (socket) => {
+    socket.on("CLIENT_SEND_MESSAGE", async (data) => {
+      const dataChat = {
+        userId: req.account.id,
+        content: data.content,
+      };
+
+      const chat = new Chat(dataChat);
+      await chat.save();
+    });
+  });
   res.render("pages/friends", commonData("friends"));
 };
 

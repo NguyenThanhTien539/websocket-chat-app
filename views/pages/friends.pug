@@ -8,23 +8,62 @@ block main
       .chat-list-panel__header
         h2 Danh sách bạn bè
         p Theo dõi trạng thái hoạt động và nhắn tin ngay.
+
       .chat-list
         each friend in friends
           include ../partials/friend-card.pug
 
     section.chat-main-panel
-      - const conversation = { avatar: friends[0].avatar, name: friends[0].name, statusText: "Online • đang nhập..." }
-      - const isRoom = false
-      include ../partials/chat-header.pug
+      - var conversation
+      - var isRoom = false
+
+      if friends.length
+        - conversation = { avatar: friends[0].avatar, name: friends[0].name, statusText: "Online • đang nhập..." }
+      else
+        - conversation = { avatar: "?", name: "Chưa chọn bạn bè", statusText: "" }
+
+      header.chat-conversation-header
+        .chat-conversation-header__left
+          .chat-avatar(class=isRoom ? "chat-avatar--room" : "")= conversation.avatar
+          .chat-conversation-header__meta
+            h3= conversation.name
+            if isRoom
+              p #{conversation.members} thành viên
+            else
+              p= conversation.statusText
+
+        .chat-conversation-header__actions
+          button.btn-icon(type="button" aria-label="call")
+            i.bi.bi-telephone
+          button.btn-icon(type="button" aria-label="info")
+            i.bi.bi-info-circle
 
       .chat-messages
         each message in directMessages
-          include ../partials/message-item.pug
+          article.message-row(class=message.side === "right" ? "is-me" : "")
+            if message.side !== "right"
+              .chat-avatar.chat-avatar--sm= message.senderAvatar
 
-      form.chat-composer
+            .message-content
+              if isRoom && message.side !== "right"
+                p.message-sender= message.senderName
+
+              .message-bubble= message.text
+
+              .message-meta
+                span= message.time
+                if message.state && message.side === "right"
+                  span.message-state= message.state
+
+      form#chat-composer
         button.btn-icon(type="button")
           i.bi.bi-emoji-smile
         button.btn-icon(type="button")
           i.bi.bi-paperclip
-        input.form-control(type="text" placeholder="Nhập tin nhắn...")
-        button.btn.btn-primary(type="button") Gửi
+        input.form-control(
+          type="text"
+          name="content"
+          placeholder="Nhập tin nhắn..."
+          autocomplete="off"
+        )
+        button.btn.btn-primary(type="submit") Gửi
