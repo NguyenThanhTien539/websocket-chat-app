@@ -3,13 +3,14 @@ require("dotenv").config();
 
 const app = express();
 const port = process.env.PORT;
+const path = require("path");
 const databaseConfig = require("./config/database.config");
 const indexRoute = require("./routes/index.route");
 
 app.set("views", `${__dirname}/views`); // Tìm đến thư mục tên là views
 app.set("view engine", "pug"); // template engine sử dụng: pug
-
-app.use(express.static(`${__dirname}/public`)); // Thiết lập thư mục chứa file tĩnh
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "public"))); // Thiết lập thư mục chứa file tĩnh
 
 databaseConfig.connect();
 

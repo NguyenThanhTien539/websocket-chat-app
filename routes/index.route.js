@@ -3,6 +3,9 @@ const router = express.Router();
 
 const uiController = require("../controllers/ui.controller");
 
+const accountRoutes = require("./account.route");
+router.use("/account", accountRoutes);
+
 router.get("/", uiController.homePage);
 router.get("/login", uiController.loginPage);
 router.get("/register", uiController.registerPage);

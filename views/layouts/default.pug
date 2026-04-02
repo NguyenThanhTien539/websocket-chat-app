@@ -10,6 +10,8 @@ html
     link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css")
     link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css")
     link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css")
+    link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css")
+
     link(rel="stylesheet", href="/css/style.css")
     if (pageStyles)
       each file in pageStyles
@@ -24,7 +26,10 @@ html
     if (showChrome !== false && showSidebar !== true)
       include ../partials/footer.pug
 
+    script(src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js") 
     script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js")
-    if (pageScripts)
-      each file in pageScripts
-        script(src=`/js/${file}`)
+    script(src="https://cdn.jsdelivr.net/npm/just-validate@4.3.0/dist/just-validate.production.min.js")
+    script(src="/js/notify.js")
+    script(src="/js/script.js")
+    script(src="/js/ui.js")
+    script(src="/js/chat-demo.js")

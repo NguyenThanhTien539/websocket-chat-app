@@ -206,7 +206,6 @@ function commonData(activeMenu) {
     activeMenu,
     showSidebar: true,
     pageStyles: ["chat.css"],
-    pageScripts: ["ui.js", "chat-demo.js"],
   };
 }
 

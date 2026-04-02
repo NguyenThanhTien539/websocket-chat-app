@@ -5,7 +5,7 @@ block main
     .auth-card
       h1 Tạo tài khoản mới
       p Bắt đầu nhắn tin và kết nối cùng bạn bè.
-      form.auth-form
+      form#register-form
         .mb-3
           label.form-label(for="fullName") Họ và tên
           input#fullName.form-control(type="text" placeholder="Nguyen Van A")
@@ -15,7 +15,7 @@ block main
         .mb-3
           label.form-label(for="password") Mật khẩu
           input#password.form-control(type="password" placeholder="Tối thiểu 8 ký tự")
-        button.btn.btn-primary.w-100(type="button") Đăng ký
+        button.btn.btn-primary.w-100(type="submit") Đăng ký
       p.auth-switch
         | Đã có tài khoản?
         a(href="/login") Đăng nhập

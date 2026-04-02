@@ -5,14 +5,14 @@ block main
     .auth-card
       h1 Đăng nhập BlinkChat
       p Truy cập nhanh vào không gian chat của bạn.
-      form.auth-form
+      form#login-form
         .mb-3
           label.form-label(for="email") Email
           input#email.form-control(type="email" placeholder="ban@blinkchat.app")
         .mb-3
           label.form-label(for="password") Mật khẩu
           input#password.form-control(type="password" placeholder="••••••••")
-        button.btn.btn-primary.w-100(type="button") Đăng nhập
+        button.btn.btn-primary.w-100(type="submit") Đăng nhập
       p.auth-switch
         | Chưa có tài khoản?
         a(href="/register") Đăng ký ngay
