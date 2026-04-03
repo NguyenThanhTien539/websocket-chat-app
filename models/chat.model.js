@@ -2,7 +2,8 @@ const mongoose = require("mongoose");
 
 const schema = new mongoose.Schema(
   {
-    userId: String,
+    senderId: String,
+    receiverId: String,
     content: String,
     images: Array,
     // videos: Array,

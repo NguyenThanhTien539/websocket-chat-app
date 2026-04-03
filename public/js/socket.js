@@ -1,19 +1,48 @@
 var socket = io();
 
+var socket = io();
+
 const formContent = document.querySelector("#chat-composer");
+const friendCards = document.querySelectorAll(".list-card");
+
+let receiverId =
+  document.querySelector(".list-card.active")?.dataset.userId || null;
+
+friendCards.forEach((card) => {
+  card.addEventListener("click", () => {
+    friendCards.forEach((item) => item.classList.remove("active"));
+
+    card.classList.add("active");
+    receiverId = card.dataset.userId;
+  });
+});
+
 if (formContent) {
   formContent.addEventListener("submit", (event) => {
     event.preventDefault();
+
     const content = formContent.content.value.trim();
-    if (content) {
-      const data = {
-        content: content,
-      };
-      socket.emit("CLIENT_SEND_MESSAGE", data);
-      formContent.content.value = "";
+
+    if (!receiverId) {
+      alert("Vui lòng chọn người nhận");
+      return;
     }
+
+    if (!content) return;
+
+    const data = {
+      content: content,
+      receiverId: receiverId,
+    };
+
+    socket.emit("CLIENT_SEND_MESSAGE", data);
+    formContent.content.value = "";
   });
 }
+
+socket.on("SERVER_SEND_MESSAGE", (data) => {
+  console.log("Message received from server: ", data);
+});
 
 document.addEventListener("click", (event) => {
   const addButton = event.target.closest(".add-friend-btn");

@@ -1,5 +1,5 @@
 const { Account } = require("../models/account.model");
-const { Chat } = require("../models/Chat.model");
+const { Chat } = require("../models/chat.model");
 
 const currentUser = {
   id: "u0",
@@ -199,6 +199,7 @@ module.exports.discoverPage = async (req, res) => {
       { _id: { $ne: req.account.id } },
       { acceptedFriends: { $nin: req.account.id } },
       { requestedFriends: { $nin: req.account.id } },
+      { friendList: { $nin: req.account.id } },
     ],
   });
 
@@ -243,21 +244,42 @@ module.exports.discoverPage = async (req, res) => {
 module.exports.friendsPage = async (req, res) => {
   const friends = await Account.find({ _id: { $in: req.account.friendList } });
 
+  const activeFriendId = req.query.friendId || friends[0]?._id?.toString();
+
+  const chats = activeFriendId
+    ? await Chat.find({
+        $or: [
+          { senderId: req.account.id, receiverId: activeFriendId },
+          { senderId: activeFriendId, receiverId: req.account.id },
+        ],
+      }).sort({ createdAt: 1 })
+    : [];
+
   _io.once("connection", (socket) => {
     socket.on("CLIENT_SEND_MESSAGE", async (data) => {
       const dataChat = {
-        userId: req.account.id,
+        senderId: req.account.id,
+        receiverId: data.receiverId,
         content: data.content,
       };
 
       const chat = new Chat(dataChat);
       await chat.save();
+
+      _io.emit("SERVER_SEND_MESSAGE", {
+        senderId: req.account.id,
+        fullName: req.account.fullName,
+        content: data.content,
+      });
     });
   });
-  console.log("Friends: ", friends);
+
   res.render("pages/friends", {
     ...commonData("friends"),
     allFriends: friends,
+    chats: chats,
+    currentUserId: req.account.id,
+    activeFriendId: activeFriendId,
   });
 };
 

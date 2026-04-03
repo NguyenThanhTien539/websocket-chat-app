@@ -11,14 +11,18 @@ block main
 
       .chat-list
         each friend in allFriends
-          article.list-card
+          article.list-card(
+            class=String(friend.id) === String(activeFriendId) ? "active" : ""
+            data-user-id=friend.id
+            onclick=`window.location='/chat/friends?friendId=${friend.id}'`
+          )
             .list-card__left
               .chat-avatar(class=friend.status === "online" ? "is-online" : "")= friend.avatar
               .list-card__info
                 h4= friend.fullName
                 p= friend.lastMessage
             .list-card__right
-              button.btn.btn-sm.btn-primary(type="button") Lưu trữ
+              button.btn.btn-sm.btn-primary(type="button" data-user-id=friend.id) Lưu trữ
 
     section.chat-main-panel
       - var conversation
@@ -46,21 +50,16 @@ block main
             i.bi.bi-info-circle
 
       .chat-messages
-        each message in directMessages
-          article.message-row(class=message.side === "right" ? "is-me" : "")
-            if message.side !== "right"
-              .chat-avatar.chat-avatar--sm= message.senderAvatar
+        each chat in chats
+          article.message-row(class=String(chat.senderId) === String(currentUserId) ? "is-me" : "")
+            if String(chat.senderId) !== String(currentUserId)
+              .chat-avatar.chat-avatar--sm= conversation.avatar
 
             .message-content
-              if isRoom && message.side !== "right"
-                p.message-sender= message.senderName
-
-              .message-bubble= message.text
+              .message-bubble= chat.content
 
               .message-meta
-                span= message.time
-                if message.state && message.side === "right"
-                  span.message-state= message.state
+                span= new Date(chat.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
 
       form#chat-composer
         button.btn-icon(type="button")
