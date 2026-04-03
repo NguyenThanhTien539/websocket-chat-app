@@ -24,12 +24,18 @@ block main
             .list-card__right
               button.btn.btn-sm.btn-primary(type="button" data-user-id=friend.id) Lưu trữ
 
-    section.chat-main-panel
+    - var selectedFriend = allFriends.find((item) => String(item.id) === String(activeFriendId)) || allFriends[0]
+
+    section.chat-main-panel(
+      data-current-user-id=currentUserId
+      data-active-friend-id=activeFriendId
+      data-active-friend-avatar=selectedFriend ? selectedFriend.avatar : "?"
+    )
       - var conversation
       - var isRoom = false
 
-      if allFriends.length
-        - conversation = { avatar: allFriends[0].avatar, name: allFriends[0].fullName, statusText: "Online • đang nhập..." }
+      if selectedFriend
+        - conversation = { avatar: selectedFriend.avatar, name: selectedFriend.fullName, statusText: "Online • đang nhập..." }
       else
         - conversation = { avatar: "?", name: "Chưa chọn bạn bè", statusText: "" }
 

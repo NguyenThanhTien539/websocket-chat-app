@@ -1,9 +1,13 @@
 var socket = io();
 
-var socket = io();
-
 const formContent = document.querySelector("#chat-composer");
 const friendCards = document.querySelectorAll(".list-card");
+const chatMainPanel = document.querySelector(".chat-main-panel");
+const messageList = document.querySelector(".chat-messages");
+
+const currentUserId = chatMainPanel?.dataset.currentUserId || null;
+const activeFriendId = chatMainPanel?.dataset.activeFriendId || null;
+const activeFriendAvatar = chatMainPanel?.dataset.activeFriendAvatar || "?";
 
 let receiverId =
   document.querySelector(".list-card.active")?.dataset.userId || null;
@@ -40,8 +44,63 @@ if (formContent) {
   });
 }
 
+function formatMessageTime(createdAt) {
+  const date = createdAt ? new Date(createdAt) : new Date();
+
+  return date.toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function appendMessageToUI(data) {
+  if (!messageList || !currentUserId) return;
+
+  const isMine = String(data.senderId) === String(currentUserId);
+  const messageRow = document.createElement("article");
+  messageRow.className = `message-row${isMine ? " is-me" : ""}`;
+
+  if (!isMine) {
+    const avatar = document.createElement("div");
+    avatar.className = "chat-avatar chat-avatar--sm";
+    avatar.textContent = activeFriendAvatar;
+    messageRow.appendChild(avatar);
+  }
+
+  const contentWrapper = document.createElement("div");
+  contentWrapper.className = "message-content";
+
+  const bubble = document.createElement("div");
+  bubble.className = "message-bubble";
+  bubble.textContent = data.content;
+
+  const meta = document.createElement("div");
+  meta.className = "message-meta";
+
+  const time = document.createElement("span");
+  time.textContent = formatMessageTime(data.createdAt);
+  meta.appendChild(time);
+
+  contentWrapper.appendChild(bubble);
+  contentWrapper.appendChild(meta);
+  messageRow.appendChild(contentWrapper);
+  messageList.appendChild(messageRow);
+
+  messageList.scrollTop = messageList.scrollHeight;
+}
+
 socket.on("SERVER_SEND_MESSAGE", (data) => {
-  console.log("Message received from server: ", data);
+  if (!currentUserId || !activeFriendId) return;
+
+  const isCurrentConversation =
+    (String(data.senderId) === String(currentUserId) &&
+      String(data.receiverId) === String(activeFriendId)) ||
+    (String(data.senderId) === String(activeFriendId) &&
+      String(data.receiverId) === String(currentUserId));
+
+  if (!isCurrentConversation) return;
+
+  appendMessageToUI(data);
 });
 
 document.addEventListener("click", (event) => {

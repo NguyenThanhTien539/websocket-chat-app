@@ -12,6 +12,7 @@ const io = new Server(server);
 const cookieParser = require("cookie-parser");
 const databaseConfig = require("./config/database.config");
 const indexRoute = require("./routes/index.route");
+const registerChatSocket = require("./sockets/chat.socket");
 
 app.use(cookieParser());
 app.set("views", `${__dirname}/views`); // Tìm đến thư mục tên là views
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public"))); // Thiết lập thư mục chứa file tĩnh
 
 global._io = io; // Đặt io lên global để có thể sử dụng trong controller
+registerChatSocket(io);
 
 databaseConfig.connect();
 
