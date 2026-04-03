@@ -203,7 +203,7 @@ module.exports.discoverPage = async (req, res) => {
   });
 
   const friendRequests = await Account.find({
-    _id: { $in: req.account.requestedFriends },
+    _id: { $in: req.account.acceptedFriends },
   });
   _io.once("connection", (socket) => {
     socket.on("CLIENT_SEND_FRIEND_REQUEST", async (data) => {
@@ -240,7 +240,9 @@ module.exports.discoverPage = async (req, res) => {
   });
 };
 
-module.exports.friendsPage = (req, res) => {
+module.exports.friendsPage = async (req, res) => {
+  const friends = await Account.find({ _id: { $in: req.account.friendList } });
+
   _io.once("connection", (socket) => {
     socket.on("CLIENT_SEND_MESSAGE", async (data) => {
       const dataChat = {
@@ -252,7 +254,11 @@ module.exports.friendsPage = (req, res) => {
       await chat.save();
     });
   });
-  res.render("pages/friends", commonData("friends"));
+  console.log("Friends: ", friends);
+  res.render("pages/friends", {
+    ...commonData("friends"),
+    allFriends: friends,
+  });
 };
 
 module.exports.requestsSentPage = async (req, res) => {
@@ -297,6 +303,85 @@ module.exports.requestsReceivedPage = async (req, res) => {
   const receivedRequests = await Account.find({
     _id: { $in: req.account.acceptedFriends },
   });
+  _io.once("connection", (socket) => {
+    socket.on("CLIENT_DECLINE_FRIEND_REQUEST", async (data) => {
+      // Remove userA from userB's friend list
+      const existAInB = await Account.findOne({
+        _id: data.toUserId,
+        requestedFriends: req.account.id,
+      });
+
+      if (existAInB) {
+        await Account.updateOne(
+          { _id: data.toUserId },
+          { $pull: { requestedFriends: req.account.id } },
+        );
+      }
+
+      // Remove userB from userA's requestedFriends list
+      const existBInA = await Account.findOne({
+        _id: req.account.id,
+        acceptedFriends: data.toUserId,
+      });
+      if (existBInA) {
+        await Account.updateOne(
+          { _id: req.account.id },
+          { $pull: { acceptedFriends: data.toUserId } },
+        );
+      }
+    });
+
+    socket.on("CLIENT_ACCEPT_FRIEND_REQUEST", async (data) => {
+      // Remove userA from userB's requestedFriends list
+      const existAInB = await Account.findOne({
+        _id: data.toUserId,
+        requestedFriends: req.account.id,
+      });
+
+      if (existAInB) {
+        await Account.updateOne(
+          { _id: data.toUserId },
+          { $pull: { requestedFriends: req.account.id } },
+        );
+      }
+      // Remove userA from userB's friend list
+      const existBInA = await Account.findOne({
+        _id: req.account.id,
+        acceptedFriends: data.toUserId,
+      });
+      if (existBInA) {
+        await Account.updateOne(
+          { _id: req.account.id },
+          { $pull: { acceptedFriends: data.toUserId } },
+        );
+      }
+
+      //add userA to userB's friend list
+      const exitAInFriendListOfB = await Account.findOne({
+        _id: data.toUserId,
+        friendList: req.account.id,
+      });
+      if (!exitAInFriendListOfB) {
+        await Account.updateOne(
+          { _id: data.toUserId },
+          { $push: { friendList: req.account.id } },
+        );
+      }
+
+      // Add userB to userA's friend list
+      const existBInFriendListOfA = await Account.findOne({
+        _id: req.account.id,
+        friendList: data.toUserId,
+      });
+      if (!existBInFriendListOfA) {
+        await Account.updateOne(
+          { _id: req.account.id },
+          { $push: { friendList: data.toUserId } },
+        );
+      }
+    });
+  });
+
   res.render("pages/requests-received", {
     ...commonData("requests-received"),
     users: receivedRequests,

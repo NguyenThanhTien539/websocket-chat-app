@@ -10,15 +10,22 @@ block main
         p Theo dõi trạng thái hoạt động và nhắn tin ngay.
 
       .chat-list
-        each friend in friends
-          include ../partials/friend-card.pug
+        each friend in allFriends
+          article.list-card
+            .list-card__left
+              .chat-avatar(class=friend.status === "online" ? "is-online" : "")= friend.avatar
+              .list-card__info
+                h4= friend.fullName
+                p= friend.lastMessage
+            .list-card__right
+              button.btn.btn-sm.btn-primary(type="button") Lưu trữ
 
     section.chat-main-panel
       - var conversation
       - var isRoom = false
 
-      if friends.length
-        - conversation = { avatar: friends[0].avatar, name: friends[0].name, statusText: "Online • đang nhập..." }
+      if allFriends.length
+        - conversation = { avatar: allFriends[0].avatar, name: allFriends[0].fullName, statusText: "Online • đang nhập..." }
       else
         - conversation = { avatar: "?", name: "Chưa chọn bạn bè", statusText: "" }
 

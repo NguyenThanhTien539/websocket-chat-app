@@ -58,3 +58,61 @@ document.addEventListener("click", (event) => {
     socket.emit("CLIENT_CANCEL_FRIEND_REQUEST", { toUserId: userIdOfFriend });
   }
 });
+
+const acceptButtons = document.querySelectorAll(".accept-friend-btn");
+if (acceptButtons) {
+  acceptButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const userIdOfFriend = button.getAttribute("data-user-id");
+      if (userIdOfFriend) {
+        socket.emit("CLIENT_ACCEPT_FRIEND_REQUEST", {
+          toUserId: userIdOfFriend,
+        });
+      }
+
+      // Ẩn nút "Đã từ chối" khi nhấn "Chấp nhận"
+      const actionBox = button.closest(".list-card__right");
+      if (actionBox) {
+        const declineButton = actionBox.querySelector(".decline-friend-btn");
+        if (declineButton) {
+          declineButton.style.display = "none";
+        }
+      }
+      // Đổi giao diện nút "Chấp nhận" thành "Đã chấp nhận"
+      button.classList.remove("accept-friend-btn", "btn-primary");
+      button.classList.add("accepted-friend-btn", "btn-success");
+      button.textContent = "Đã chấp nhận";
+      button.disabled = true;
+      button.setAttribute("aria-disabled", "true");
+    });
+  });
+}
+
+const declineButtons = document.querySelectorAll(".decline-friend-btn");
+if (declineButtons) {
+  declineButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const userIdOfFriend = button.getAttribute("data-user-id");
+      if (userIdOfFriend) {
+        socket.emit("CLIENT_DECLINE_FRIEND_REQUEST", {
+          toUserId: userIdOfFriend,
+        });
+      }
+
+      const actionBox = button.closest(".list-card__right");
+      if (actionBox) {
+        const acceptButton = actionBox.querySelector(".accept-friend-btn");
+        if (acceptButton) {
+          // Ẩn nút "Chấp nhận" khi nhấn "Đã từ chối"
+          acceptButton.style.display = "none";
+        }
+      }
+
+      button.classList.remove("decline-friend-btn", "btn-light");
+      button.classList.add("declined-friend-btn", "btn-secondary");
+      button.textContent = "Đã từ chối";
+      button.disabled = true;
+      button.setAttribute("aria-disabled", "true");
+    });
+  });
+}

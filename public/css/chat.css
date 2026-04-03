@@ -300,6 +300,12 @@
   gap: 8px;
 }
 
+.list-card__right .declined-friend-btn,
+.list-card__right .is-disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
 .chat-main-panel {
   display: grid;
   grid-template-rows: auto 1fr auto auto;
