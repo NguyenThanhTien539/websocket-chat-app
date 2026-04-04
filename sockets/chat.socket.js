@@ -69,6 +69,25 @@ module.exports = function registerChatSocket(io) {
       }
     });
 
+    socket.on("CLIENT_TYPING", (data = {}) => {
+      try {
+        const receiverId = String(data.receiverId || "").trim();
+        const isTyping = Boolean(data.isTyping);
+
+        if (!receiverId) {
+          return;
+        }
+
+        io.to(`user:${receiverId}`).emit("SERVER_TYPING", {
+          senderId,
+          receiverId,
+          isTyping,
+        });
+      } catch (error) {
+        console.error("Error in CLIENT_TYPING:", error);
+      }
+    });
+
     socket.on("CLIENT_SEND_FRIEND_REQUEST", async (data = {}) => {
       try {
         const toUserId = String(data.toUserId || "").trim();

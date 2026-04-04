@@ -30,6 +30,7 @@ block main
       data-current-user-id=currentUserId
       data-active-friend-id=activeFriendId
       data-active-friend-avatar=selectedFriend ? selectedFriend.avatar : "?"
+      data-active-friend-name=selectedFriend ? selectedFriend.fullName : ""
     )
       - var conversation
       - var isRoom = false
@@ -66,6 +67,16 @@ block main
 
               .message-meta
                 span= new Date(chat.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+
+      .typing-row.d-none#typing-indicator
+        .typing-row__inner
+          .typing-avatar= selectedFriend ? selectedFriend.avatar : "?"
+          .typing-row__content
+            span.typing-row__text
+            .typing-dots(aria-hidden="true")
+              span
+              span
+              span
 
       form#chat-composer.chat-composer
         button.btn-icon(type="button")

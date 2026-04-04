@@ -8,12 +8,28 @@ const messageList = document.querySelector(".chat-messages");
 const currentUserId = chatMainPanel?.dataset.currentUserId || null;
 const activeFriendId = chatMainPanel?.dataset.activeFriendId || null;
 const activeFriendAvatar = chatMainPanel?.dataset.activeFriendAvatar || "?";
+const activeFriendName = chatMainPanel?.dataset.activeFriendName || "Bạn bè";
+const typingIndicator = document.querySelector("#typing-indicator");
+const typingIndicatorText =
+  typingIndicator?.querySelector(".typing-row__text") || null;
 
 let receiverId =
   document.querySelector(".list-card.active")?.dataset.userId || null;
 
 if (messageList) {
   messageList.scrollTop = messageList.scrollHeight;
+}
+
+function setTypingIndicator(isTyping) {
+  if (!typingIndicator || !typingIndicatorText) return;
+
+  if (isTyping) {
+    typingIndicatorText.textContent = `${activeFriendName} đang nhập...`;
+    typingIndicator.classList.remove("d-none");
+    return;
+  }
+
+  typingIndicator.classList.add("d-none");
 }
 
 if (formContent) {
@@ -64,6 +80,53 @@ friendCards.forEach((card) => {
 });
 
 if (formContent) {
+  const composerInput =
+    formContent.querySelector('input[name="content"]') ||
+    formContent.querySelector(".form-control");
+  let typingTimeoutId = null;
+  let hasTypingState = false;
+
+  const emitTyping = (isTyping) => {
+    if (!receiverId || !currentUserId) return;
+
+    socket.emit("CLIENT_TYPING", {
+      receiverId,
+      isTyping,
+    });
+  };
+
+  if (composerInput) {
+    composerInput.addEventListener("keyup", () => {
+      const hasValue = composerInput.value.trim().length > 0;
+
+      if (hasValue && !hasTypingState) {
+        hasTypingState = true;
+        emitTyping(true);
+      }
+
+      if (!hasValue && hasTypingState) {
+        hasTypingState = false;
+        emitTyping(false);
+        setTypingIndicator(false);
+      }
+
+      clearTimeout(typingTimeoutId);
+      typingTimeoutId = setTimeout(() => {
+        if (!hasTypingState) return;
+        hasTypingState = false;
+        emitTyping(false);
+        setTypingIndicator(false);
+      }, 1200);
+    });
+
+    composerInput.addEventListener("blur", () => {
+      if (!hasTypingState) return;
+      hasTypingState = false;
+      emitTyping(false);
+      setTypingIndicator(false);
+    });
+  }
+
   formContent.addEventListener("submit", (event) => {
     event.preventDefault();
 
@@ -83,6 +146,13 @@ if (formContent) {
 
     socket.emit("CLIENT_SEND_MESSAGE", data);
     formContent.content.value = "";
+
+    if (hasTypingState) {
+      hasTypingState = false;
+      emitTyping(false);
+      setTypingIndicator(false);
+    }
+    clearTimeout(typingTimeoutId);
   });
 }
 
@@ -142,7 +212,22 @@ socket.on("SERVER_SEND_MESSAGE", (data) => {
 
   if (!isCurrentConversation) return;
 
+  if (String(data.senderId) === String(activeFriendId)) {
+    setTypingIndicator(false);
+  }
   appendMessageToUI(data);
+});
+
+socket.on("SERVER_TYPING", (data) => {
+  if (!currentUserId || !activeFriendId) return;
+
+  const isCurrentConversation =
+    String(data.senderId) === String(activeFriendId) &&
+    String(data.receiverId) === String(currentUserId);
+
+  if (!isCurrentConversation) return;
+
+  setTypingIndicator(Boolean(data.isTyping));
 });
 
 document.addEventListener("click", (event) => {
