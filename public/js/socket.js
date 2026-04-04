@@ -24,7 +24,7 @@ function setTypingIndicator(isTyping) {
   if (!typingIndicator || !typingIndicatorText) return;
 
   if (isTyping) {
-    typingIndicatorText.textContent = `${activeFriendName} đang nhập...`;
+    typingIndicatorText.textContent = activeFriendName;
     typingIndicator.classList.remove("d-none");
     return;
   }

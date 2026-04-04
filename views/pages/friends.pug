@@ -70,13 +70,11 @@ block main
 
       .typing-row.d-none#typing-indicator
         .typing-row__inner
-          .typing-avatar= selectedFriend ? selectedFriend.avatar : "?"
-          .typing-row__content
-            span.typing-row__text
-            .typing-dots(aria-hidden="true")
-              span
-              span
-              span
+          span.typing-row__text
+          .typing-dots(aria-hidden="true")
+            span
+            span
+            span
 
       form#chat-composer.chat-composer
         button.btn-icon(type="button")
