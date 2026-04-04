@@ -67,11 +67,11 @@ block main
               .message-meta
                 span= new Date(chat.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
 
-      form#chat-composer
+      form#chat-composer.chat-composer
         button.btn-icon(type="button")
           i.bi.bi-emoji-smile
         button.btn-icon(type="button")
-          i.bi.bi-paperclip
+          i.bi.bi-image
         input.form-control(
           type="text"
           name="content"

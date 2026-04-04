@@ -309,7 +309,9 @@
 .chat-main-panel {
   display: grid;
   grid-template-rows: auto 1fr auto auto;
+  height: calc(100vh - 32px);
   min-height: calc(100vh - 32px);
+  overflow: hidden;
 }
 
 .chat-conversation-header {
@@ -355,6 +357,7 @@
 
 .chat-messages {
   padding: 16px;
+  min-height: 0;
   overflow-y: auto;
   background: linear-gradient(180deg, #fcfdff 0%, #f7faff 100%);
 }
@@ -426,6 +429,8 @@
   grid-template-columns: auto auto 1fr auto;
   gap: 8px;
   align-items: center;
+  position: relative;
+  overflow: visible;
 }
 
 .chat-composer .form-control {
@@ -437,6 +442,18 @@
 .chat-composer .form-control:focus {
   box-shadow: 0 0 0 0.22rem rgba(37, 99, 235, 0.2);
   border-color: var(--primary);
+}
+
+.emoji-picker-panel {
+  position: absolute;
+  left: 8px;
+  bottom: calc(100% + 8px);
+  z-index: 30;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  background: #fff;
 }
 
 .empty-state {

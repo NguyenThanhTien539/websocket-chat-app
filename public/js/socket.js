@@ -12,6 +12,48 @@ const activeFriendAvatar = chatMainPanel?.dataset.activeFriendAvatar || "?";
 let receiverId =
   document.querySelector(".list-card.active")?.dataset.userId || null;
 
+if (messageList) {
+  messageList.scrollTop = messageList.scrollHeight;
+}
+
+if (formContent) {
+  const composerInput =
+    formContent.querySelector('input[name="content"]') ||
+    formContent.querySelector(".form-control");
+  const emojiButton = formContent.querySelector(
+    ".btn-icon i.bi-emoji-smile",
+  )?.parentElement;
+
+  if (composerInput && emojiButton) {
+    const pickerPanel = document.createElement("div");
+    pickerPanel.className = "emoji-picker-panel d-none";
+
+    const picker = document.createElement("emoji-picker");
+    pickerPanel.appendChild(picker);
+    formContent.appendChild(pickerPanel);
+
+    emojiButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      pickerPanel.classList.toggle("d-none");
+    });
+
+    picker.addEventListener("emoji-click", (event) => {
+      composerInput.value += event.detail.unicode;
+      composerInput.focus();
+    });
+
+    document.addEventListener("click", (event) => {
+      if (
+        !pickerPanel.classList.contains("d-none") &&
+        !pickerPanel.contains(event.target) &&
+        !emojiButton.contains(event.target)
+      ) {
+        pickerPanel.classList.add("d-none");
+      }
+    });
+  }
+}
+
 friendCards.forEach((card) => {
   card.addEventListener("click", () => {
     friendCards.forEach((item) => item.classList.remove("active"));
