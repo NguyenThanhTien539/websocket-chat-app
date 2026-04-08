@@ -294,6 +294,21 @@
   color: var(--text-muted);
 }
 
+.list-card__presence {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.list-card__presence.is-online {
+  color: #16a34a;
+}
+
+.list-card__presence.is-offline {
+  color: #64748b;
+}
+
 .list-card__right {
   display: flex;
   align-items: center;

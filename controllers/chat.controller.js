@@ -1,5 +1,6 @@
 const { Account } = require("../models/account.model");
 const { Chat } = require("../models/chat.model");
+const presenceStore = require("../utils/presence.store");
 
 const currentUser = {
   id: "u0",
@@ -215,8 +216,27 @@ module.exports.discoverPage = async (req, res) => {
 
 module.exports.friendsPage = async (req, res) => {
   const friends = await Account.find({ _id: { $in: req.account.friendList } });
+  const friendsWithPresence = friends.map((friend) => {
+    const friendData = friend.toObject();
+    const friendId = String(friendData._id);
+    const initials = String(friendData.fullName || "?")
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0] || "")
+      .join("")
+      .toUpperCase();
 
-  const activeFriendId = req.query.friendId || friends[0]?._id?.toString();
+    return {
+      ...friendData,
+      id: friendId,
+      avatar: friendData.avatar || initials || "?",
+      isOnline: presenceStore.isOnline(friendId),
+      lastMessage: "Bắt đầu cuộc trò chuyện",
+    };
+  });
+
+  const activeFriendId = req.query.friendId || friendsWithPresence[0]?.id;
 
   const chats = activeFriendId
     ? await Chat.find({
@@ -229,7 +249,7 @@ module.exports.friendsPage = async (req, res) => {
 
   res.render("pages/friends", {
     ...commonData("friends"),
-    allFriends: friends,
+    allFriends: friendsWithPresence,
     chats: chats,
     currentUserId: req.account.id,
     activeFriendId: activeFriendId,

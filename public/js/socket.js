@@ -9,6 +9,12 @@ const currentUserId = chatMainPanel?.dataset.currentUserId || null;
 const activeFriendId = chatMainPanel?.dataset.activeFriendId || null;
 const activeFriendAvatar = chatMainPanel?.dataset.activeFriendAvatar || "?";
 const activeFriendName = chatMainPanel?.dataset.activeFriendName || "Bạn bè";
+const activeFriendAvatarElement = document.querySelector(
+  "#active-friend-avatar",
+);
+const activeFriendStatusElement = document.querySelector(
+  "#active-friend-status",
+);
 const typingIndicator = document.querySelector("#typing-indicator");
 const typingIndicatorText =
   typingIndicator?.querySelector(".typing-row__text") || null;
@@ -30,6 +36,33 @@ function setTypingIndicator(isTyping) {
   }
 
   typingIndicator.classList.add("d-none");
+}
+
+function updatePresenceUI(userId, isOnline) {
+  if (!userId) return;
+
+  const avatarElements = document.querySelectorAll(
+    `[data-presence-avatar="${userId}"]`,
+  );
+  avatarElements.forEach((element) => {
+    element.classList.toggle("is-online", Boolean(isOnline));
+  });
+
+  const labelElements = document.querySelectorAll(
+    `[data-presence-label="${userId}"]`,
+  );
+  labelElements.forEach((element) => {
+    element.classList.toggle("is-online", Boolean(isOnline));
+    element.classList.toggle("is-offline", !isOnline);
+    element.textContent = isOnline ? "Online" : "Offline";
+  });
+
+  if (String(activeFriendId) === String(userId)) {
+    activeFriendAvatarElement?.classList.toggle("is-online", Boolean(isOnline));
+    if (activeFriendStatusElement) {
+      activeFriendStatusElement.textContent = isOnline ? "Online" : "Offline";
+    }
+  }
 }
 
 if (formContent) {
@@ -228,6 +261,21 @@ socket.on("SERVER_TYPING", (data) => {
   if (!isCurrentConversation) return;
 
   setTypingIndicator(Boolean(data.isTyping));
+});
+
+socket.on("SERVER_ONLINE_FRIENDS", (data = {}) => {
+  const onlineFriendIds = Array.isArray(data.friendIds) ? data.friendIds : [];
+
+  onlineFriendIds.forEach((userId) => {
+    updatePresenceUI(String(userId), true);
+  });
+});
+
+socket.on("SERVER_FRIEND_PRESENCE_CHANGED", (data = {}) => {
+  const changedUserId = String(data.userId || "").trim();
+  if (!changedUserId) return;
+
+  updatePresenceUI(changedUserId, Boolean(data.isOnline));
 });
 
 document.addEventListener("click", (event) => {

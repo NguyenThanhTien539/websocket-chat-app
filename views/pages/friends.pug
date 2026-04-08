@@ -17,10 +17,17 @@ block main
             onclick=`window.location='/chat/friends?friendId=${friend.id}'`
           )
             .list-card__left
-              .chat-avatar(class=friend.status === "online" ? "is-online" : "")= friend.avatar
+              .chat-avatar(
+                class=friend.isOnline ? "is-online" : ""
+                data-presence-avatar=friend.id
+              )= friend.avatar
               .list-card__info
                 h4= friend.fullName
                 p= friend.lastMessage
+                span.list-card__presence(
+                  class=friend.isOnline ? "is-online" : "is-offline"
+                  data-presence-label=friend.id
+                )= friend.isOnline ? "Online" : "Offline"
             .list-card__right
               button.btn.btn-sm.btn-primary(type="button" data-user-id=friend.id) Lưu trữ
 
@@ -36,19 +43,22 @@ block main
       - var isRoom = false
 
       if selectedFriend
-        - conversation = { avatar: selectedFriend.avatar, name: selectedFriend.fullName, statusText: "Online • đang nhập..." }
+        - conversation = { avatar: selectedFriend.avatar, name: selectedFriend.fullName, statusText: selectedFriend.isOnline ? "Online" : "Offline" }
       else
         - conversation = { avatar: "?", name: "Chưa chọn bạn bè", statusText: "" }
 
       header.chat-conversation-header
         .chat-conversation-header__left
-          .chat-avatar(class=isRoom ? "chat-avatar--room" : "")= conversation.avatar
+          .chat-avatar(
+            id="active-friend-avatar"
+            class=[isRoom ? "chat-avatar--room" : "", selectedFriend && selectedFriend.isOnline ? "is-online" : ""].join(" ").trim()
+          )= conversation.avatar
           .chat-conversation-header__meta
             h3= conversation.name
             if isRoom
               p #{conversation.members} thành viên
             else
-              p= conversation.statusText
+              p#active-friend-status= conversation.statusText
 
         .chat-conversation-header__actions
           button.btn-icon(type="button" aria-label="call")

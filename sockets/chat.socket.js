@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { Account } = require("../models/account.model");
 const { Chat } = require("../models/chat.model");
+const presenceStore = require("../utils/presence.store");
 
 function parseCookieHeader(cookieHeader = "") {
   return cookieHeader.split(";").reduce((result, part) => {
@@ -12,6 +13,22 @@ function parseCookieHeader(cookieHeader = "") {
 }
 
 module.exports = function registerChatSocket(io) {
+  async function emitPresenceToFriends(userId, isOnline) {
+    const account = await Account.findById(userId).select("friendList");
+    const friendIds = (account?.friendList || []).map((id) => String(id));
+
+    if (!friendIds.length) {
+      return;
+    }
+
+    friendIds.forEach((friendId) => {
+      io.to(`user:${friendId}`).emit("SERVER_FRIEND_PRESENCE_CHANGED", {
+        userId: String(userId),
+        isOnline,
+      });
+    });
+  }
+
   io.use(async (socket, next) => {
     try {
       const cookies = parseCookieHeader(socket.handshake.headers.cookie || "");
@@ -38,6 +55,20 @@ module.exports = function registerChatSocket(io) {
   io.on("connection", (socket) => {
     const senderId = String(socket.account._id);
     socket.join(`user:${senderId}`);
+
+    const isUserJustOnline = presenceStore.addConnection(senderId, socket.id);
+    const friendIds = (socket.account.friendList || []).map((id) => String(id));
+    const onlineFriendIds = presenceStore.getOnlineIds(friendIds);
+
+    socket.emit("SERVER_ONLINE_FRIENDS", {
+      friendIds: onlineFriendIds,
+    });
+
+    if (isUserJustOnline) {
+      emitPresenceToFriends(senderId, true).catch((error) => {
+        console.error("Error in emitPresenceToFriends(online):", error);
+      });
+    }
 
     socket.on("CLIENT_SEND_MESSAGE", async (data = {}) => {
       try {
@@ -242,6 +273,21 @@ module.exports = function registerChatSocket(io) {
       } catch (error) {
         console.error("Error in CLIENT_ACCEPT_FRIEND_REQUEST:", error);
       }
+    });
+
+    socket.on("disconnect", () => {
+      const isUserNowOffline = presenceStore.removeConnection(
+        senderId,
+        socket.id,
+      );
+
+      if (!isUserNowOffline) {
+        return;
+      }
+
+      emitPresenceToFriends(senderId, false).catch((error) => {
+        console.error("Error in emitPresenceToFriends(offline):", error);
+      });
     });
   });
 };
