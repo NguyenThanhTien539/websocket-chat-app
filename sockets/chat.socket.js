@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { Account } = require("../models/account.model");
 const { Chat } = require("../models/chat.model");
+const { Room } = require("../models/room.model");
 const presenceStore = require("../utils/presence.store");
 
 function parseCookieHeader(cookieHeader = "") {
@@ -13,6 +14,25 @@ function parseCookieHeader(cookieHeader = "") {
 }
 
 module.exports = function registerChatSocket(io) {
+  async function joinAllUserRooms(socket, userId) {
+    const rooms = await Room.find({ members: userId }).select("_id");
+    rooms.forEach((room) => {
+      socket.join(`room:${String(room._id)}`);
+    });
+  }
+
+  async function ensureRoomAccess(roomId, userId) {
+    const room = await Room.findById(roomId);
+    if (!room) return null;
+
+    const memberIds = (room.members || []).map((id) => String(id));
+    if (!memberIds.includes(String(userId))) {
+      return null;
+    }
+
+    return room;
+  }
+
   async function emitPresenceToFriends(userId, isOnline) {
     const account = await Account.findById(userId).select("friendList");
     const friendIds = (account?.friendList || []).map((id) => String(id));
@@ -55,6 +75,9 @@ module.exports = function registerChatSocket(io) {
   io.on("connection", (socket) => {
     const senderId = String(socket.account._id);
     socket.join(`user:${senderId}`);
+    joinAllUserRooms(socket, senderId).catch((error) => {
+      console.error("Error in joinAllUserRooms:", error);
+    });
 
     const isUserJustOnline = presenceStore.addConnection(senderId, socket.id);
     const friendIds = (socket.account.friendList || []).map((id) => String(id));
@@ -82,6 +105,7 @@ module.exports = function registerChatSocket(io) {
         const chat = new Chat({
           senderId,
           receiverId,
+          chatType: "direct",
           content,
         });
         await chat.save();
@@ -116,6 +140,100 @@ module.exports = function registerChatSocket(io) {
         });
       } catch (error) {
         console.error("Error in CLIENT_TYPING:", error);
+      }
+    });
+
+    socket.on("CLIENT_JOIN_ROOM", async (data = {}) => {
+      try {
+        const roomId = String(data.roomId || "").trim();
+        if (!roomId) return;
+
+        const room = await ensureRoomAccess(roomId, senderId);
+        if (!room) {
+          socket.emit("SERVER_ROOM_ERROR", {
+            roomId,
+            message: "Bạn không có quyền truy cập phòng chat này",
+          });
+          return;
+        }
+
+        socket.join(`room:${roomId}`);
+      } catch (error) {
+        console.error("Error in CLIENT_JOIN_ROOM:", error);
+      }
+    });
+
+    socket.on("CLIENT_LEAVE_ROOM", (data = {}) => {
+      try {
+        const roomId = String(data.roomId || "").trim();
+        if (!roomId) return;
+
+        socket.leave(`room:${roomId}`);
+      } catch (error) {
+        console.error("Error in CLIENT_LEAVE_ROOM:", error);
+      }
+    });
+
+    socket.on("CLIENT_SEND_ROOM_MESSAGE", async (data = {}) => {
+      try {
+        const roomId = String(data.roomId || "").trim();
+        const content = String(data.content || "").trim();
+
+        if (!roomId || !content) {
+          return;
+        }
+
+        const room = await ensureRoomAccess(roomId, senderId);
+        if (!room) {
+          socket.emit("SERVER_ROOM_ERROR", {
+            roomId,
+            message: "Bạn không có quyền gửi tin nhắn vào phòng này",
+          });
+          return;
+        }
+
+        const chat = new Chat({
+          senderId,
+          roomId,
+          chatType: "room",
+          content,
+        });
+        await chat.save();
+
+        await Room.updateOne(
+          { _id: roomId },
+          {
+            $set: {
+              lastMessage: {
+                senderId,
+                content,
+                createdAt: chat.createdAt,
+              },
+              updatedAt: new Date(),
+            },
+          },
+        );
+
+        const payload = {
+          senderId,
+          roomId,
+          chatType: "room",
+          fullName: socket.account.fullName,
+          content,
+          createdAt: chat.createdAt,
+        };
+
+        io.to(`room:${roomId}`).emit("SERVER_SEND_ROOM_MESSAGE", payload);
+
+        (room.members || []).forEach((memberId) => {
+          io.to(`user:${String(memberId)}`).emit("SERVER_ROOM_UPDATED", {
+            roomId,
+            type: "message",
+            lastMessage: payload,
+          });
+        });
+      } catch (error) {
+        console.error("Error in CLIENT_SEND_ROOM_MESSAGE:", error);
       }
     });
 

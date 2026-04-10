@@ -1,5 +1,7 @@
 const { Account } = require("../models/account.model");
 const { Chat } = require("../models/chat.model");
+const { Room } = require("../models/room.model");
+const mongoose = require("mongoose");
 const presenceStore = require("../utils/presence.store");
 
 const currentUser = {
@@ -182,6 +184,115 @@ function commonData(activeMenu) {
     pageStyles: ["chat.css"],
   };
 }
+
+function normalizeId(value) {
+  return String(value || "").trim();
+}
+
+function getInitials(fullName = "") {
+  return String(fullName || "?")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0] || "")
+    .join("")
+    .toUpperCase();
+}
+
+function isValidObjectId(value) {
+  return mongoose.Types.ObjectId.isValid(normalizeId(value));
+}
+
+async function getFriendOptions(account) {
+  const friendIds = (account.friendList || []).map((id) => normalizeId(id));
+  const friends = await Account.find({ _id: { $in: friendIds } }).select(
+    "_id fullName avatar",
+  );
+
+  return friends.map((friend) => {
+    const friendId = normalizeId(friend._id);
+
+    return {
+      id: friendId,
+      fullName: friend.fullName,
+      avatar: friend.avatar || getInitials(friend.fullName),
+    };
+  });
+}
+
+async function renderRoomsPage(req, res, selectedRoomId = null) {
+  const currentUserId = normalizeId(req.account.id);
+  const rooms = await Room.find({ members: currentUserId }).sort({
+    updatedAt: -1,
+  });
+
+  const allMemberIds = [
+    ...new Set(
+      rooms.flatMap((room) => (room.members || []).map((id) => normalizeId(id))),
+    ),
+  ];
+
+  const members = allMemberIds.length
+    ? await Account.find({ _id: { $in: allMemberIds } }).select("_id fullName avatar")
+    : [];
+  const membersById = new Map(
+    members.map((member) => [normalizeId(member._id), member]),
+  );
+
+  const roomCards = rooms.map((room) => {
+    const roomId = normalizeId(room._id);
+    const latestContent = room.lastMessage?.content || "Chưa có tin nhắn";
+
+    return {
+      id: roomId,
+      name: room.name,
+      members: (room.members || []).length,
+      avatar: getInitials(room.name),
+      lastMessage: latestContent,
+      unread: 0,
+      canInvite: (room.admins || [])
+        .map((id) => normalizeId(id))
+        .includes(currentUserId),
+    };
+  });
+
+  const activeRoomId =
+    normalizeId(selectedRoomId) || normalizeId(roomCards[0]?.id || "");
+
+  const selectedRoom =
+    roomCards.find((room) => normalizeId(room.id) === activeRoomId) || null;
+
+  const chats = activeRoomId
+    ? await Chat.find({
+        roomId: activeRoomId,
+        $or: [{ chatType: "room" }, { chatType: { $exists: false } }],
+      }).sort({ createdAt: 1 })
+    : [];
+
+  const roomMessages = chats.map((chat) => {
+    const senderId = normalizeId(chat.senderId);
+    const sender = membersById.get(senderId);
+
+    return {
+      ...chat.toObject(),
+      senderDisplayName: sender?.fullName || "Unknown",
+      senderAvatar: sender?.avatar || getInitials(sender?.fullName),
+    };
+  });
+
+  const friendOptions = await getFriendOptions(req.account);
+
+  res.render("pages/rooms", {
+    ...commonData("rooms"),
+    rooms: roomCards,
+    selectedRoom,
+    chats: roomMessages,
+    currentUserId,
+    activeRoomId,
+    friendOptions,
+  });
+}
+
 function dashboardViewData() {
   return {
     ...commonData("dashboard"),
@@ -240,9 +351,20 @@ module.exports.friendsPage = async (req, res) => {
 
   const chats = activeFriendId
     ? await Chat.find({
-        $or: [
-          { senderId: req.account.id, receiverId: activeFriendId },
-          { senderId: activeFriendId, receiverId: req.account.id },
+        $and: [
+          {
+            $or: [
+              { senderId: req.account.id, receiverId: activeFriendId },
+              { senderId: activeFriendId, receiverId: req.account.id },
+            ],
+          },
+          {
+            $or: [
+              { chatType: "direct" },
+              { chatType: { $exists: false } },
+              { chatType: null },
+            ],
+          },
         ],
       }).sort({ createdAt: 1 })
     : [];
@@ -277,20 +399,213 @@ module.exports.requestsReceivedPage = async (req, res) => {
   });
 };
 
-module.exports.roomsPage = (req, res) => {
-  res.render("pages/rooms", {
-    ...commonData("rooms"),
-    selectedRoom: rooms[0],
+module.exports.roomsPage = async (req, res) => {
+  await renderRoomsPage(req, res);
+};
+
+module.exports.roomDetailPage = async (req, res) => {
+  const roomId = normalizeId(req.params.roomId);
+  if (!isValidObjectId(roomId)) {
+    return res.redirect("/chat/rooms");
+  }
+
+  const room = await Room.findById(roomId);
+
+  const roomMemberIds = (room?.members || []).map((id) => normalizeId(id));
+  if (!room || !roomMemberIds.includes(normalizeId(req.account.id))) {
+    return res.redirect("/chat/rooms");
+  }
+
+  await renderRoomsPage(req, res, roomId);
+};
+
+module.exports.createRoomPost = async (req, res) => {
+  const name = String(req.body.name || "").trim();
+  const currentUserId = normalizeId(req.account.id);
+  const memberIds = Array.isArray(req.body.memberIds) ? req.body.memberIds : [];
+  const normalizedMemberIds = [
+    ...new Set(memberIds.map((id) => normalizeId(id)).filter(Boolean)),
+  ];
+
+  if (!name) {
+    return res.json({
+      code: "error",
+      message: "Tên phòng không được để trống",
+    });
+  }
+
+  const invalidMemberIds = normalizedMemberIds.filter((id) => !isValidObjectId(id));
+  if (invalidMemberIds.length) {
+    return res.json({
+      code: "error",
+      message: "Danh sách thành viên không hợp lệ",
+    });
+  }
+
+  const inviterFriendList = (req.account.friendList || []).map((id) =>
+    normalizeId(id),
+  );
+  const nonFriendIds = normalizedMemberIds.filter(
+    (memberId) => !inviterFriendList.includes(memberId),
+  );
+
+  if (nonFriendIds.length) {
+    return res.json({
+      code: "error",
+      message: "Chỉ có thể mời người nằm trong friendList",
+    });
+  }
+
+  const memberSet = new Set([currentUserId, ...normalizedMemberIds]);
+  const finalMemberIds = [...memberSet];
+
+  const existingMembers = await Account.find({
+    _id: { $in: finalMemberIds },
+  }).select("_id");
+
+  if (existingMembers.length !== finalMemberIds.length) {
+    return res.json({
+      code: "error",
+      message: "Có thành viên không tồn tại",
+    });
+  }
+
+  const newRoom = new Room({
+    name,
+    creatorId: currentUserId,
+    members: finalMemberIds,
+    admins: [currentUserId],
+  });
+  await newRoom.save();
+
+  const io = global._io;
+  if (io) {
+    finalMemberIds.forEach((memberId) => {
+      io.to(`user:${memberId}`).emit("SERVER_ROOM_CREATED", {
+        roomId: normalizeId(newRoom._id),
+      });
+    });
+  }
+
+  return res.json({
+    code: "success",
+    message: "Tạo phòng chat thành công",
+    roomId: normalizeId(newRoom._id),
   });
 };
 
-module.exports.roomDetailPage = (req, res) => {
-  const selectedRoom =
-    rooms.find((room) => room.id === req.params.roomId) || rooms[0];
+module.exports.inviteMembersPost = async (req, res) => {
+  const currentUserId = normalizeId(req.account.id);
+  const roomId = normalizeId(req.params.roomId);
+  const memberIds = Array.isArray(req.body.memberIds) ? req.body.memberIds : [];
+  const normalizedMemberIds = [
+    ...new Set(memberIds.map((id) => normalizeId(id)).filter(Boolean)),
+  ];
 
-  res.render("pages/rooms", {
-    ...commonData("rooms"),
-    selectedRoom,
+  if (!isValidObjectId(roomId)) {
+    return res.json({
+      code: "error",
+      message: "Phòng chat không hợp lệ",
+    });
+  }
+
+  const room = await Room.findById(roomId);
+  if (!room) {
+    return res.json({
+      code: "error",
+      message: "Không tìm thấy phòng chat",
+    });
+  }
+
+  const roomMemberIds = (room.members || []).map((id) => normalizeId(id));
+  if (!roomMemberIds.includes(currentUserId)) {
+    return res.json({
+      code: "error",
+      message: "Bạn không phải thành viên của phòng chat",
+    });
+  }
+
+  const roomAdminIds = (room.admins || []).map((id) => normalizeId(id));
+  if (!roomAdminIds.includes(currentUserId)) {
+    return res.json({
+      code: "error",
+      message: "Bạn không có quyền mời thành viên",
+    });
+  }
+
+  if (!normalizedMemberIds.length) {
+    return res.json({
+      code: "error",
+      message: "Vui lòng chọn ít nhất một thành viên",
+    });
+  }
+
+  const invalidMemberIds = normalizedMemberIds.filter((id) => !isValidObjectId(id));
+  if (invalidMemberIds.length) {
+    return res.json({
+      code: "error",
+      message: "Danh sách thành viên không hợp lệ",
+    });
+  }
+
+  const inviterFriendList = (req.account.friendList || []).map((id) =>
+    normalizeId(id),
+  );
+  const nonFriendIds = normalizedMemberIds.filter(
+    (memberId) => !inviterFriendList.includes(memberId),
+  );
+
+  if (nonFriendIds.length) {
+    return res.json({
+      code: "error",
+      message: "Chỉ có thể mời người nằm trong friendList",
+    });
+  }
+
+  const existingMemberSet = new Set((room.members || []).map((id) => normalizeId(id)));
+  const newMemberIds = normalizedMemberIds.filter((id) => !existingMemberSet.has(id));
+
+  if (!newMemberIds.length) {
+    return res.json({
+      code: "error",
+      message: "Các thành viên đã tồn tại trong phòng chat",
+    });
+  }
+
+  const existingMembers = await Account.find({
+    _id: { $in: newMemberIds },
+  }).select("_id");
+
+  if (existingMembers.length !== newMemberIds.length) {
+    return res.json({
+      code: "error",
+      message: "Có thành viên không tồn tại",
+    });
+  }
+
+  await Room.updateOne(
+    { _id: roomId },
+    {
+      $addToSet: {
+        members: { $each: newMemberIds },
+      },
+    },
+  );
+
+  const io = global._io;
+  if (io) {
+    [...new Set([...roomMemberIds, ...newMemberIds])].forEach((memberId) => {
+      io.to(`user:${normalizeId(memberId)}`).emit("SERVER_ROOM_UPDATED", {
+        roomId,
+        type: "membership",
+      });
+    });
+  }
+
+  return res.json({
+    code: "success",
+    message: "Mời thành viên thành công",
+    roomId,
   });
 };
 

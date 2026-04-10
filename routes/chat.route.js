@@ -28,6 +28,14 @@ router.get(
 
 router.get("/rooms", authMiddleware.requireAuth, chatController.roomsPage);
 
+router.post("/rooms", authMiddleware.requireAuth, chatController.createRoomPost);
+
+router.post(
+  "/rooms/:roomId/invite",
+  authMiddleware.requireAuth,
+  chatController.inviteMembersPost,
+);
+
 router.get(
   "/rooms/:roomId",
   authMiddleware.requireAuth,

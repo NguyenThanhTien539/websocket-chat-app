@@ -1,4 +1,4 @@
-extends ../layouts/default.pug
+﻿extends ../layouts/default.pug
 
 block main
   main.chat-layout
@@ -6,46 +6,134 @@ block main
 
     section.chat-list-panel
       .chat-list-panel__header
-        h2 Danh sách phòng chat
-        p Quản lý phòng nhóm và cuộc trò chuyện theo dự án.
+        h2 Danh sach phong chat
+        p Quan ly phong nhom va cuoc tro chuyen theo du an.
         button.btn.btn-primary.btn-sm(type="button" data-bs-toggle="modal" data-bs-target="#createRoomModal")
           i.bi.bi-plus-lg
-          |  Tạo phòng chat
+          |  Tao phong chat
       .chat-list
-        each room in rooms
-          include ../partials/room-card.pug
+        each room in (rooms || [])
+          article.list-card(
+            class=String(room.id) === String(activeRoomId) ? "active" : ""
+            data-room-id=room.id
+            onclick=`window.location='/chat/rooms/${room.id}'`
+          )
+            .list-card__left
+              .chat-avatar.chat-avatar--room= room.avatar
+              .list-card__info
+                h4= room.name
+                p #{room.members} thanh vien • #{room.lastMessage}
+            .list-card__right
+              if room.unread > 0
+                span.chat-badge= room.unread
+              a.btn.btn-sm.btn-primary(href=`/chat/rooms/${room.id}`) Nhan tin
 
-    section.chat-main-panel
-      - const activeRoom = selectedRoom || rooms[0]
-      - const conversation = { avatar: activeRoom.avatar, name: activeRoom.name, members: activeRoom.members }
-      - const isRoom = true
-      include ../partials/chat-header.pug
+    section.chat-main-panel(
+      data-chat-type="room"
+      data-current-user-id=currentUserId
+      data-active-room-id=activeRoomId
+      data-active-room-avatar=selectedRoom ? selectedRoom.avatar : "?"
+      data-active-room-name=selectedRoom ? selectedRoom.name : "Phong chat"
+      data-can-invite=selectedRoom ? selectedRoom.canInvite : false
+    )
+      if selectedRoom
+        header.chat-conversation-header
+          .chat-conversation-header__left
+            .chat-avatar.chat-avatar--room= selectedRoom.avatar
+            .chat-conversation-header__meta
+              h3= selectedRoom.name
+              p= `${selectedRoom.members} thanh vien`
 
-      .chat-messages
-        each message in groupMessages
-          include ../partials/message-item.pug
+          .chat-conversation-header__actions
+            if selectedRoom.canInvite
+              button.btn.btn-sm.btn-outline-primary(type="button" data-bs-toggle="modal" data-bs-target="#inviteRoomModal") Moi ban
+            button.btn-icon(type="button" aria-label="call")
+              i.bi.bi-telephone
+            button.btn-icon(type="button" aria-label="info")
+              i.bi.bi-info-circle
 
-      form.chat-composer
-        button.btn-icon(type="button")
-          i.bi.bi-emoji-smile
-        button.btn-icon(type="button")
-          i.bi.bi-paperclip
-        input.form-control(type="text" placeholder="Nhập tin nhắn nhóm...")
-        button.btn.btn-primary(type="button") Gửi
+        .chat-messages
+          each chat in (chats || [])
+            article.message-row(class=String(chat.senderId) === String(currentUserId) ? "is-me" : "")
+              if String(chat.senderId) !== String(currentUserId)
+                .chat-avatar.chat-avatar--sm= chat.senderAvatar
+
+              .message-content
+                if String(chat.senderId) !== String(currentUserId)
+                  p.message-sender= chat.senderDisplayName
+                .message-bubble= chat.content
+
+                .message-meta
+                  span= new Date(chat.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+
+        form#room-chat-composer.chat-composer
+          button.btn-icon(type="button")
+            i.bi.bi-emoji-smile
+          button.btn-icon(type="button")
+            i.bi.bi-image
+          input.form-control(
+            type="text"
+            name="content"
+            placeholder="Nhap tin nhan nhom..."
+            autocomplete="off"
+          )
+          button.btn.btn-primary(type="submit") Gui
+      else
+        - const title = "Chua co phong chat"
+        - const description = "Hay tao phong chat moi de bat dau tro chuyen cung ban be."
+        include ../partials/empty-state.pug
 
   .modal.fade#createRoomModal(tabindex="-1" aria-hidden="true")
     .modal-dialog
       .modal-content
         .modal-header
-          h5.modal-title Tạo phòng chat mới
+          h5.modal-title Tao phong chat moi
           button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
         .modal-body
           .mb-3
-            label.form-label(for="roomName") Tên phòng
-            input#roomName.form-control(type="text" placeholder="Ví dụ: Team Marketing")
-          .mb-3
-            label.form-label(for="roomDesc") Mô tả ngắn
-            textarea#roomDesc.form-control(rows="3" placeholder="Mục tiêu của phòng chat")
+            label.form-label(for="roomName") Ten phong
+            input#roomName.form-control(type="text" name="name" placeholder="Vi du: Team Marketing")
+          .mb-2
+            label.form-label Moi ban be
+          .chat-list(style="max-height: 260px;")
+            if friendOptions && friendOptions.length
+              each friend in (friendOptions || [])
+                label.list-card(style="padding:8px 10px; cursor:pointer;")
+                  .list-card__left
+                    .chat-avatar= friend.avatar
+                    .list-card__info
+                      h4= friend.fullName
+                  .list-card__right
+                    input.form-check-input(type="checkbox" name="memberIds" value=friend.id)
+            else
+              p.users-empty Danh sach ban be trong.
         .modal-footer
-          button.btn.btn-light(type="button" data-bs-dismiss="modal") Hủy
-          button.btn.btn-primary(type="button") Tạo phòng
+          button.btn.btn-light(type="button" data-bs-dismiss="modal") Huy
+          button#submit-create-room.btn.btn-primary(type="button") Tao phong
+
+  if selectedRoom && selectedRoom.canInvite
+    .modal.fade#inviteRoomModal(tabindex="-1" aria-hidden="true")
+      .modal-dialog
+        .modal-content
+          .modal-header
+            h5.modal-title Moi thanh vien vao phong
+            button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+          .modal-body
+            .chat-list(style="max-height: 300px;")
+              if friendOptions && friendOptions.length
+                each friend in (friendOptions || [])
+                  label.list-card(style="padding:8px 10px; cursor:pointer;")
+                    .list-card__left
+                      .chat-avatar= friend.avatar
+                      .list-card__info
+                        h4= friend.fullName
+                    .list-card__right
+                      input.form-check-input(type="checkbox" name="inviteMemberIds" value=friend.id)
+              else
+                p.users-empty Danh sach ban be trong.
+          .modal-footer
+            button.btn.btn-light(type="button" data-bs-dismiss="modal") Huy
+            button#submit-invite-room.btn.btn-primary(
+              type="button"
+              data-room-id=selectedRoom.id
+            ) Moi vao phong
